@@ -1,6 +1,6 @@
-<div style="align:center"><b>카카오지도 열람시 app key 등록 후 사용가능</b></div>
+<div align=center><b>카카오지도 열람시 app key 등록 후 사용가능</b></div>
 
-<div style="align:center">
+<div align=center>
   <img src="https://img.shields.io/badge/java-007396?style=for-the-badge&logo=java&logoColor=white">
   <img src="https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
   <img src="https://img.shields.io/badge/jquery-0769AD?style=for-the-badge&logo=jquery&logoColor=white">
