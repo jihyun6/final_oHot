@@ -1,0 +1,48 @@
+@charset "UTF-8";
+
+  .w-33 { width: 32%; display: inline-block; }
+  label.small { font-size: 0.75rem; line-height: 1.2rem; }
+  
+  /* 고정 너비 설정 */
+  .fixed-width-container {
+    min-width: 1200px;
+    width: 100%;
+  }
+  
+  /* 스크롤 관련 스타일 추가 */
+  .content-wrapper {
+    overflow-x: auto !important; /* 가로 스크롤 강제 활성화 */
+  }
+  
+  /* 테이블 관련 스타일 */
+  .ellipsis-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+    width: 100%;
+    vertical-align: middle;
+  }
+
+  .table-fixed {
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  @media (min-width: 768px) {
+    .col-md-1-5 {
+      flex: 0 0 11.5%;
+      max-width: 11.5%;
+    }
+
+  }
+
+  #pagination-container {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }

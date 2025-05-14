@@ -1,0 +1,59 @@
+@charset "UTF-8";
+/* 헤더 네비 디자인 */
+  .weverse-tabs {
+    background: linear-gradient(90deg, #0f0f2f, #1a1a40); /* 어두운 배경 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 0;
+  }
+
+  .weverse-tabs .nav {
+    gap: 1.5rem;
+  }
+
+  .weverse-tabs .nav-link {
+    color: #ccc;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: none;
+    background: transparent;
+    border-radius: 2rem;
+    padding: 0.4rem 1.2rem;
+    transition: all 0.3s ease;
+  }
+
+  .weverse-tabs .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 192, 203, 0.1); /* 연한 핑크 호버 효과 */
+  }
+
+  .weverse-tabs .nav-link.active {
+    background-color: #ff69b4 !important; /* 핫핑크 배경 */
+    color: #fff; 
+    font-weight: 700;
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
+  }
+  
+ .medi-subnav .nav-link,
+.medi-subnav .nav-link:focus,
+.medi-subnav .nav-link:hover,
+.medi-subnav .nav-link.active {
+  color: black !important;
+}
+  
+  @media (max-width: 576px) {
+    .weverse-tabs .nav {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .weverse-tabs .nav-link {
+      white-space: nowrap;
+    }
+  }
+
+.live-section:hover {
+  transform: translateY(-3px);
+  transition: transform 0.3s ease;
+}

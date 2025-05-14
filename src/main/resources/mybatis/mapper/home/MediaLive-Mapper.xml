@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.media.mapper.MediaLiveBoardMapper">
+
+	<!-- mediaPostVO N : 1 artistGroupVO -->
+	<resultMap id="mediaPostMap" type="com.ohot.home.media.vo.MediaPostVO" >
+		<result property="rnum" column="RNUM"/>
+		<result property="mediaMebershipYn" column="MEDIA_MEBERSHIP_YN"/>
+		<result property="mediaVideoUrl" column="MEDIA_VIDEO_URL"/>
+		<result property="mediaPostNo" column="MEDIA_POST_NO"/>
+		<result property="mediaPostTitle" column="MEDIA_POST_TITLE"/>
+		<result property="mediaPostCn" column="MEDIA_POST_CN"/>
+		<result property="mediaRegDt" column="MEDIA_REG_DT"/>
+		<result property="formatRegDt" column="FORMAT_REG_DT"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="mediaDelYn" column="MEDIA_DEL_YN"/>
+		<result property="isbannerYn" column="ISBANNER_YN"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="fileLogoSaveLocate" column="FILE_LOGO_SAVE_LOCATE"/>
+	
+		<association property="artistGroupVO" resultMap="artistGroupMap" ></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.ArtistGroupVO" id="artistGroupMap">
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupDebutYmd" column="ART_GROUP_DEBUT_YMD"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupExpln" column="ART_GROUP_EXPLN"/>
+		<result property="artGroupRegYmd" column="ART_GROUP_REG_YMD"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	</resultMap>
+		
+	<!-- 미디어 포스트 내용이랑 아티스트 그룹 이름 가져옴 -->
+	<select id="getMediaList" resultMap="mediaPostMap">
+		 SELECT
+		 	   A.MEDIA_MEBERSHIP_YN,
+			   A.MEDIA_VIDEO_URL,
+			   A.MEDIA_POST_NO,
+			   A.MEDIA_POST_TITLE,
+			   A.MEDIA_POST_CN,
+			   A.MEDIA_REG_DT,
+			   A.FILE_GROUP_NO,
+			   A.MEDIA_DEL_YN,
+			   A.ISBANNER_YN,
+			   A.ART_GROUP_NO,
+			   B.ART_GROUP_NM
+		 FROM MEDIA_POST A
+		 LEFT JOIN ARTIST_GROUP B ON A.ART_GROUP_NO = B.ART_GROUP_NO
+		 ORDER BY A.MEDIA_REG_DT DESC
+	</select>
+	
+	<!-- 검색옵션으로 조회 -->
+	<select id="getMediaSerchList" parameterType="map" resultMap="mediaPostMap">
+		 SELECT
+		 	   A.MEDIA_MEBERSHIP_YN,
+			   A.MEDIA_VIDEO_URL,
+			   A.MEDIA_POST_NO,
+			   A.MEDIA_POST_TITLE,
+			   A.MEDIA_POST_CN,
+			   A.MEDIA_REG_DT,
+			   A.FILE_GROUP_NO,
+			   A.MEDIA_DEL_YN,
+			   A.ISBANNER_YN,
+			   A.ART_GROUP_NO,
+			   B.ART_GROUP_NM
+		 FROM MEDIA_POST A
+		 LEFT JOIN ARTIST_GROUP B ON A.ART_GROUP_NO = B.ART_GROUP_NO
+		 <where>
+			 <if test="artGroupNo != null and artGroupNo != ''">
+	            AND A.ART_GROUP_NO = #{artGroupNo}
+	        </if>
+	        <if test="artGroupNm != null and artGroupNm != ''">
+	            AND B.ART_GROUP_NM = #{artGroupNm}
+	        </if>
+	        <if test="startDate != null and startDate != ''">
+	            AND A.MEDIA_REG_DT >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="endDate != null and endDate != ''">
+	            AND A.MEDIA_REG_DT &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+	        </if>
+	        <if test="mediaMebershipYn != null and mediaMebershipYn != ''">
+	            AND A.MEDIA_MEBERSHIP_YN = #{mediaMebershipYn}
+	        </if>
+	        <if test="isbannerYn != null and isbannerYn != ''">
+	            AND A.ISBANNER_YN = #{isbannerYn}
+	        </if>
+	        <if test="mediaDelYn != null and mediaDelYn != ''">
+	            AND A.MEDIA_DEL_YN = #{mediaDelYn}
+	        </if>
+	        <if test="mediaPostTitle != null and mediaPostTitle != ''">
+	            AND A.MEDIA_POST_TITLE LIKE '%' || #{mediaPostTitle} || '%'
+	        </if>
+    	</where>
+		 ORDER BY A.MEDIA_REG_DT DESC
+	</select>
+	
+	<!-- 우선 오세인 전용 (페이징 추가함) -->
+	<select id="getMediaSerchList2" parameterType="map" resultMap="mediaPostMap">
+		SELECT *
+		FROM (
+			 SELECT
+			 	   ROW_NUMBER() OVER (ORDER BY a.media_reg_dt DESC) AS rnum
+			 	   , a.media_mebership_yn
+				   , a.media_video_url
+				   , a.media_post_no
+				   , a.media_post_title
+				   , a.media_post_cn
+				   , a.media_reg_dt
+				   , TO_CHAR(media_reg_dt, 'YYYY"년" MM"월" DD"일"') AS format_reg_dt
+				   , a.file_group_no
+				   , a.media_del_yn
+				   , a.isbanner_yn
+				   , a.art_group_no
+				   , b.art_group_nm
+			 FROM media_post a
+			 LEFT JOIN artist_group b ON a.art_group_no = b.art_group_no
+				 <where>
+					 <if test="artGroupNo != null and artGroupNo != ''">
+			            AND a.art_group_no = #{artGroupNo}
+			        </if>
+			        <if test="artGroupNm != null and artGroupNm != ''">
+			            AND b.art_group_nm = #{artGroupNm}
+			        </if>
+			        <if test="startDate != null and startDate != ''">
+			            AND a.media_reg_dt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			        </if>
+			        <if test="endDate != null and endDate != ''">
+			            AND a.media_reg_dt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+			        </if>
+			        <if test="mediaMebershipYn != null and mediaMebershipYn != ''">
+			            AND a.media_mebership_yn = #{mediaMebershipYn}
+			        </if>
+			        <if test="isbannerYn != null and isbannerYn != ''">
+			            AND a.isbanner_yn = #{isbannerYn}
+			        </if>
+			        <if test="mediaDelYn != null and mediaDelYn != ''">
+			            AND a.media_del_yn = #{mediaDelYn}
+			        </if>
+			        <if test="mediaPostTitle != null and mediaPostTitle != ''">
+			            AND a.media_post_title LIKE '%' || #{mediaPostTitle} || '%'
+			        </if>
+		    	</where>
+	    	)
+	    WHERE rnum BETWEEN #{start} AND #{end}
+		 
+	</select>
+	
+	<select id="getMediaDetail" parameterType="map" resultMap="mediaPostMap">
+		 SELECT
+		 	   A.MEDIA_MEBERSHIP_YN,
+			   A.MEDIA_VIDEO_URL,
+			   A.MEDIA_POST_NO,
+			   A.MEDIA_POST_TITLE,
+			   A.MEDIA_POST_CN,
+			   A.MEDIA_REG_DT,
+			   A.FILE_GROUP_NO,
+			   A.MEDIA_DEL_YN,
+			   A.ISBANNER_YN,
+			   A.ART_GROUP_NO,
+			   B.ART_GROUP_NM
+			   , (SELECT f.file_save_locate
+		              FROM file_detail f
+		             WHERE f.file_group_no = b.logo_file_group_no 
+                     ) AS file_logo_save_locate
+		 FROM MEDIA_POST A
+		 LEFT JOIN ARTIST_GROUP B ON A.ART_GROUP_NO = B.ART_GROUP_NO
+         WHERE A.MEDIA_POST_NO = #{mediaPostNo}
+         AND A.ART_GROUP_NO = #{artGroupNo}
+	</select>
+	
+	<insert id="createPost" parameterType="com.ohot.home.media.vo.MediaPostVO">
+		INSERT INTO MEDIA_POST(
+                          MEDIA_POST_NO
+                        , MEDIA_POST_TITLE
+                        , MEDIA_POST_CN
+                        , MEDIA_REG_DT
+                        , MEDIA_DEL_YN
+                        , ISBANNER_YN
+                        , ART_GROUP_NO
+                        , MEDIA_MEBERSHIP_YN
+                        , MEDIA_VIDEO_URL
+                        , FILE_GROUP_NO
+		)
+		VALUES (
+		          (SELECT NVL(MAX(MEDIA_POST_NO), 0) + 1 FROM MEDIA_POST)
+		        , #{mediaPostTitle}
+		        , #{mediaPostCn}
+		        , SYSDATE
+		        , 'N'
+		        , #{isbannerYn}
+		        , #{artGroupNo} /*17 newjeans*/
+		        , #{mediaMebershipYn}
+		        , #{mediaVideoUrl}
+		        , #{fileGroupNo}
+		)
+	</insert>
+	
+	<!-- 미디어 게시글 수정 -->
+	<update id="updateMediaPost" parameterType="com.ohot.home.media.vo.MediaPostVO">
+		UPDATE  MEDIA_POST
+	  	   SET  MEDIA_POST_TITLE = #{mediaPostTitle}
+		        , MEDIA_POST_CN = #{mediaPostCn}
+		        , MEDIA_DEL_YN = 'N'
+		        , ISBANNER_YN = #{isbannerYn}
+		        , ART_GROUP_NO = #{artGroupNo}
+		        , MEDIA_MEBERSHIP_YN = #{mediaMebershipYn}
+		        , MEDIA_VIDEO_URL = #{mediaVideoUrl}
+		        , FILE_GROUP_NO = #{fileGroupNo}
+		 WHERE 1=1
+	  	   AND  MEDIA_POST_NO = #{mediaPostNo}
+	</update>
+	
+	<!-- 미디어 게시글 삭제  -->
+	<update id="deleteMediaPost" parameterType="Integer">
+		UPDATE  MEDIA_POST
+	  	   SET  MEDIA_DEL_YN = 'Y'
+		 WHERE 1=1
+	  	   AND  MEDIA_POST_NO = #{mediaPostNo}
+	</update>
+	
+	<!-- 단순 아티스트그룹 리스트 조회 -->
+	<select id="getArtistGroupList" resultType="com.ohot.vo.ArtistGroupVO">
+		SELECT art_group_no
+    		   , art_group_nm
+		FROM ARTIST_GROUP
+		WHERE 1=1
+		AND art_group_del_yn = 'N'
+	</select>
+	
+	<!-- 단순 멤버쉽 여부 조회  -->
+	<select id="membershipCheck" parameterType="int" resultType="String">
+		SELECT membership_yn
+		FROM community_profile
+		WHERE com_profile_no = #{comProfileNo}
+	</select>
+	
+	<select id="getMediaListCount" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM media_post a
+	    LEFT JOIN artist_group b ON a.art_group_no = b.art_group_no
+	    <where>
+	        <if test="artGroupNo != null and artGroupNo != ''">
+	            AND a.art_group_no = #{artGroupNo}
+	        </if>
+	        <if test="artGroupNm != null and artGroupNm != ''">
+	            AND b.art_group_nm = #{artGroupNm}
+	        </if>
+	        <if test="startDate != null and startDate != ''">
+	            AND a.media_reg_dt >= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="endDate != null and endDate != ''">
+	            AND a.media_reg_dt &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+	        </if>
+	        <if test="mediaMebershipYn != null and mediaMebershipYn != ''">
+	            AND a.media_mebership_yn = #{mediaMebershipYn}
+	        </if>
+	        <if test="isbannerYn != null and isbannerYn != ''">
+	            AND a.isbanner_yn = #{isbannerYn}
+	        </if>
+	        <if test="mediaDelYn != null and mediaDelYn != ''">
+	            AND a.media_del_yn = #{mediaDelYn}
+	        </if>
+	        <if test="mediaPostTitle != null and mediaPostTitle != ''">
+	            AND a.media_post_title LIKE '%' || #{mediaPostTitle} || '%'
+	        </if>
+    	</where>
+</select>
+	
+</mapper>

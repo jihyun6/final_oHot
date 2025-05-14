@@ -1,0 +1,137 @@
+    body { 
+      background-color: #f7f9fc; 
+      font-family: 'Pretendard', sans-serif; 
+    } 
+    
+/*     .container{ */
+/*     	width:60% !important; */
+/*     } */
+    
+    .card-box { 
+      background: white; 
+      border-radius: 12px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+      padding: 20px; 
+      margin-bottom: 16px; 
+      transition: all 0.3s ease;
+    }
+    
+/*     .card-box:hover { */
+/*       box-shadow: 0 4px 15px rgba(0,0,0,0.15); */
+/*       transform: translateY(-2px); */
+/*     } */
+    
+    .category-icon { 
+      width: 24px; 
+      height: 24px; 
+      margin-right: 10px; 
+    } 
+    
+    .rounded-toggle { 
+      border-radius: 20px; 
+      padding: 4px 12px; 
+    } 
+    
+    .memberInfo { 
+      border: none; 
+      background-color: #fff; 
+      width: 200px; 
+    } 
+    
+    .changeBtn { 
+      border: 2px solid #e1e1e1; 
+      border-radius: 12px; 
+      background-color: #fff; 
+      font-weight: 600; 
+      padding: 6px 12px; 
+      cursor: pointer; 
+      color: #F86D72;
+      transition: all 0.2s ease;
+    }
+    
+    .changeBtn:hover {
+      background-color: #F86D72;
+      color: white;
+      border-color: #F86D72;
+    }
+    
+    .text-decoration-underline {
+      transition: all 0.2s ease;
+    }
+    
+    .text-decoration-underline:hover {
+      color: #f0f0f0 !important;
+      text-decoration: none !important;
+    }
+    
+    button.card-box {
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+    }
+    
+    button.card-box:hover {
+      background-color: #f5f5f5;
+    }
+    
+    button.card-box:focus {
+	  background-color: #f5f5f5;
+	  outline: 2px solid #4285f4;
+	}
+    
+    .inquiryPostBtn {
+      border: 2px solid #e1e1e1; 
+      height: 50px;
+      border-radius: 12px; 
+      background-color: #fff; 
+      font-weight: 600; 
+      padding: 10px 20px;
+      cursor: pointer; 
+      transition: all 0.2s ease;
+      color: black; /* 텍스트 색상 변경 */
+  	  text-decoration: none;
+     }
+     
+     .inquiryPostBtn:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .inquiry-container {
+	  min-height: 480px;
+	  display: flex;
+	  flex-direction: column;
+	}
+
+.pagination .page-item.active .page-link {
+    background-color: #F86D72 !important;
+    border-color: #F86D72 !important;
+    color: white !important;
+  }
+
+  /* 일반 페이지 */
+  .pagination .page-link {
+    color: #2d3436 !important; /* 텍스트 색상 */
+  }
+
+  .pagination .page-link:hover {
+    background-color: #dfe6e9 !important;
+  }
+
+  /* 비활성화 상태 */
+  .pagination .page-item.disabled .page-link {
+    color: #b2bec3 !important;
+    pointer-events: none !important;
+    background-color: #f1f2f6 !important;
+  }
+   .btn-outline-custom {
+    color: #F86D72 !important;
+    border: 1px solid #F86D72 !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .btn-outline-custom:hover {
+    background-color: #F86D72 !important;
+    color: #fff !important;
+  }

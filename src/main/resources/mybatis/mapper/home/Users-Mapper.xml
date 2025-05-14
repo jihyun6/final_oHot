@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.mapper.UsersMapper">
+
+	
+	
+	<!-- 이메일로 사용자 찾기 -->
+	<select id="findByEmail" parameterType="string" resultMap="usersMap">
+	/* com.ohot.mapper.UsersMapper.findByEmail */
+	    SELECT  U.USER_NO, U.USER_MAIL, USER_PSWD, A.AUTH_NM, U.ENABLED, U.SNS_YN
+		FROM USERS U, USER_AUTH A
+		WHERE U.USER_NO = A.USER_NO
+		AND USER_MAIL = #{userMail}
+	</select>
+	
+	<select id="findByEmailAdmin" parameterType="String" resultMap="empMap" >
+	/* com.ohot.mapper.UsersMapper.findByEmailAdmin */
+		SELECT 
+				e.emp_no
+		       , e.emp_pswd
+		       , e.emp_nm
+		       , e.emp_rrno
+		       , e.emp_brdt
+		       , e.emp_telno
+		       , e.emp_eml_addr
+		       , e.jncmp_ymd
+		       , e.rsgntn_ymd
+		       , e.emp_zip
+		       , e.emp_addr
+		       , e.emp_daddr
+		       , e.offcs_photo
+              , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+              , e.jbgd_cd
+              , e.stamp_file_group_no
+              , d.dept_no
+              , d.dept_nm
+              , d.up_dept
+              , d.dept_sn
+              , fg.file_group_no
+              , fg.file_regdate
+              , fd.file_sn
+              , fd.file_original_name
+              , fd.file_save_name
+              , fd.file_save_locate
+              , fd.file_size
+              , fd.file_ext
+              , fd.file_mime
+              , fd.file_fancysize
+              , fd.file_save_date
+              , fd.file_downcount
+              , ( 
+                  SELECT fd.file_save_locate
+                    FROM file_detail fd
+                   WHERE fd.file_group_no = e.file_group_no
+                ) AS profile_save_locate 
+        FROM department d 
+        LEFT OUTER JOIN employee e ON(e.dept_no = d.dept_no)
+          LEFT OUTER JOIN file_group fg ON(e.stamp_file_group_no = fg.file_group_no)
+          LEFT OUTER JOIN (
+                 SELECT 
+                       file_sn
+                       , file_group_no
+                       , file_original_name
+                       , file_save_name
+                       , file_save_locate
+                       , file_size
+                       , file_ext
+                       , file_mime
+                       , file_fancysize
+                       , file_save_date
+                       , file_downcount
+                       , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+                   FROM file_detail
+          ) FD ON fg.file_group_no = fd.file_group_no AND FD.RN = 1
+       WHERE e.rsgntn_ymd IS NULL
+       AND e.emp_eml_addr = #{empEmlAddr}
+	</select>
+	
+	<select id="findByEmailMember" parameterType="string" resultMap="memberMap">
+	/* com.ohot.mapper.UsersMapper.findByEmailMember */
+		SELECT    m.mem_no
+		        , m.mem_last_name
+		        , m.mem_first_name
+		        , m.mem_nicknm
+		        , m.mem_email
+		        , m.mem_telno
+		        , m.mem_birth
+		        , m.mem_pswd
+		        , m.join_ymd
+		        , m.secsn_ymd
+		        , m.mem_access_token
+		        , m.enabled
+		        , m.mem_stat_sec_code_no
+		        , m.mem_sec_code_no
+		        , m.mem_del_yn
+		        , m.sns_mem_yn
+		        , a.art_no
+		        , a.art_group_no
+		        , a.art_act_nm
+		        , a.art_expln
+		        , a.art_reg_ymd
+		        , a.file_group_no
+		        , a.art_del_yn
+		        , fd.file_save_locate
+		FROM 	member m
+		LEFT OUTER JOIN artist a ON m.mem_no = a.mem_no
+		LEFT OUTER JOIN (
+	              SELECT 
+	              		file_sn
+	              		, file_group_no
+	                    , file_save_locate              
+	                    , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+	                FROM file_detail
+	       ) fd ON a.file_group_no = fd.file_group_no AND fd.RN = 1
+		WHERE 	m.mem_email = #{memEmail}
+	</select>
+	
+	<select id="selectExpMemberShipList" parameterType="int" resultMap="communityMap">
+	/* com.ohot.mapper.UsersMapper.selectExpMemberShipList */
+	WITH ms2 AS (
+	    SELECT 
+	        cp.com_profile_no,
+	        cp.membership_yn,
+	        ms.start_ymd,
+	        ms.exp_ymd,
+	        ms.membership_no,
+	        ROW_NUMBER() OVER (
+	            PARTITION BY cp.com_profile_no
+	            ORDER BY ms.membership_no DESC
+	        ) AS RN
+	    FROM community_profile CP
+	    LEFT OUTER JOIN membership ms 
+	        ON cp.com_profile_no = ms.com_profile_no
+	    WHERE cp.art_group_no IN (
+	        SELECT art_group_no
+	        FROM community_profile
+	        WHERE MEM_NO = #{memNo}
+	          AND COM_DELYN = 'N'
+	    )
+	    AND ms.membership_no IS NOT NULL
+	)
+	SELECT 
+	    com_profile_no,
+	    membership_yn,
+	    start_ymd,
+	    exp_ymd,
+	    membership_no
+	FROM ms2
+	WHERE rn = 1
+	AND membership_yn = 'Y'
+	AND exp_ymd &lt; SYSDATE
+	</select>
+	
+	<update id="expMemberShip" parameterType="int">
+	/* com.ohot.mapper.UsersMapper.expMemberShip */
+		update community_profile
+		SET membership_yn = 'N'
+		WHERE com_profile_no = #{comProfileNo}
+	</update>
+	
+	<select id="getMemStopYN" parameterType="int" resultType="com.ohot.vo.ReportmanageVO">
+	/* com.ohot.mapper.UsersMapper."getReportEndDt" */
+		SELECT *
+		FROM (
+				SELECT 
+				    ROW_NUMBER() OVER (ORDER BY report_end_dt DESC) AS rnum,
+				    rp.report_board_no,
+				    rp.report_gubun,
+				    rp.report_reg_dt,
+				    rp.report_end_dt
+				FROM report_board_post rp
+				LEFT OUTER JOIN community_post cp ON rp.report_board_no = cp.board_no
+				LEFT OUTER JOIN community_reply cr ON rp.report_board_no = cr.reply_no
+				WHERE rp.report_end_dt > SYSDATE
+				AND (cr.mem_no=#{memNo} OR cp.mem_no =#{memNo})
+			) t
+		WHERE t.rnum = 1
+	</select>
+	
+	<update id="updateMemStatus" parameterType="int">
+		UPDATE member
+		SET mem_stat_sec_code_no = '001'
+		WHERE mem_no = #{memNo}
+	</update>
+	
+	
+	<!-- ///////// resultMap 모음 /////////////// -->
+	<resultMap type="com.ohot.vo.UsersVO" id="usersMap">
+		<result property="userMail" column="USER_MAIL"/>
+		<result property="userPswd" column="USER_PSWD"/>
+		<result property="userNo" column="USER_NO"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="snsYn" column="SNS_YN"/>
+		<collection property="userAuthList" resultMap="userAuthMap"></collection>
+	</resultMap>
+	<resultMap type="com.ohot.vo.UserAuthVO" id="userAuthMap">
+		<result property="userNo" column="USER_NO"/>
+		<result property="authNm" column="AUTH_NM"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.MemberVO" id="memberMap">
+		<result property="memDelYn" column="MEM_DEL_YN"/>
+		<result property="snsMemYn" column="SNS_MEM_YN"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="memLastName" column="MEM_LAST_NAME"/>
+		<result property="memFirstName" column="MEM_FIRST_NAME"/>
+		<result property="memNicknm" column="MEM_NICKNM"/>
+		<result property="memEmail" column="MEM_EMAIL"/>
+		<result property="memTelno" column="MEM_TELNO"/>
+		<result property="memBirth" column="MEM_BIRTH"/>
+		<result property="memPswd" column="MEM_PSWD"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="secsnYmd" column="SECSN_YMD"/>
+		<result property="memAccessToken" column="MEM_ACCESS_TOKEN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="memStatSecCodeNo" column="MEM_STAT_SEC_CODE_NO"/>
+		<result property="memSecCodeNo" column="MEM_SEC_CODE_NO"/>
+		<association property="artistVO" resultMap="artistMap"></association>
+		<collection property="authVOList" resultMap="memberAuthMap"></collection>
+	</resultMap>
+	<resultMap type="com.ohot.vo.AuthVO" id="memberAuthMap">
+		<result property="memNo" column="MEM_NO"/>
+		<result property="authNm" column="AUTH_NM"/>
+	</resultMap>
+	<resultMap type="com.ohot.vo.ArtistVO" id="artistMap">
+		<result property="artDelYn" column="ART_DEL_YN"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="artExpln" column="ART_EXPLN"/>
+		<result property="artRegYmd" column="ART_REG_YMD"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.EmployeeVO" id="empMap">
+		<result property="enabled" column="ENABLED"/>
+		<result property="snsEmpYn" column="SNS_EMP_YN"/>
+		<result property="empNo" column="EMP_NO"/>
+		<result property="empPswd" column="EMP_PSWD"/>
+		<result property="empNm" column="EMP_NM"/>
+		<result property="empRrno" column="EMP_RRNO"/>
+		<result property="empBrdt" column="EMP_BRDT"/>
+		<result property="empTelno" column="EMP_TELNO"/>
+		<result property="empEmlAddr" column="EMP_EML_ADDR"/>
+		<result property="jncmpYmd" column="JNCMP_YMD"/>
+		<result property="rsgntnYmd" column="RSGNTN_YMD"/>
+		<result property="empZip" column="EMP_ZIP"/>
+		<result property="empAddr" column="EMP_ADDR"/>
+		<result property="empDaddr" column="EMP_DADDR"/>
+		<result property="offcsPhoto" column="OFFCS_PHOTO" jdbcType="BLOB" javaType="byte[]"/>
+		<result property="jbgdCd" column="JBGD_CD"/>
+		<result property="sexdtnCd" column="SEXDTN_CD"/>
+		<result property="deptNo" column="DEPT_NO"/>
+		<result property="empStngYn" column="EMP_STNG_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="stampFileGroupNo" column="STAMP_FILE_GROUP_NO"/>
+		<result property="position" column="POSITION"/>
+		<result property="profileSaveLocate" column="PROFILE_SAVE_LOCATE" />
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+		<association property="departmentVO" resultMap="departmentMap"></association>
+		<collection property="auth2VOList" resultMap="empAuthMap"></collection>
+	</resultMap>
+	<resultMap type="com.ohot.vo.Auth2VO" id="empAuthMap">
+		<result property="empNo" column="EMP_NO"/>
+		<result property="authNm" column="AUTH_NM"/>
+	</resultMap>
+	<resultMap type="com.ohot.employee.vo.DepartmentVO" id="departmentMap">
+		<result property="deptNo" column="DEPT_NO"/>
+		<result property="deptNm" column="DEPT_NM"/>
+		<result property="upDept" column="UP_DEPT"/>
+		<result property="deptSn" column="DEPT_SN"/>
+		<result property="crtYmd" column="CRT_YMD"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.home.community.vo.CommunityProfileVO" id="communityMap">
+		<result property="membershipYn" column="MEMBERSHIP_YN"/>
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="comFileGroupNo" column="COM_FILE_GROUP_NO"/>
+		<result property="comJoinYmd" column="COM_JOIN_YMD"/>
+		<result property="comDelyn" column="COM_DELYN"/>
+		<result property="comAuth" column="COM_AUTH"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<collection property="memberShipList" resultMap="memberShipMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.MemberShopVO" id="memberShipMap">
+		<result property="membershipNo" column="MEMBERSHIP_NO"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="startYmd" column="START_YMD"/>
+		<result property="expYmd" column="EXP_YMD"/>
+	</resultMap>
+	
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 매퍼interface의 풀경로명을 매퍼XML의 namespace속성의 값으로 쓰면 둘이 연결됨 -->
+<mapper namespace="com.ohot.mapper.CommonCodeGroupMapper">
+	
+	<resultMap type="com.ohot.vo.CommonCodeGroupVO" id="commonCodeGroupMap">
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="commCodeGrpNm" column="COMM_CODE_GRP_NM"/>
+		<collection property="commonDetailCodeVOList" resultMap="commonDetailcodeMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.CommonDetailCodeVO" id="commonDetailcodeMap">
+		<result property="commDetCodeNo" column="COMM_DET_CODE_NO"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="commDetCodeNm" column="COMM_DET_CODE_NM"/>
+		<result property="commDetDesc" column="COMM_DET_DESC"/>
+		<result property="expPeriod" column="EXP_PERIOD"/>
+		<result property="useYn" column="USE_YN"/>
+	</resultMap>
+	
+	<!-- 굿즈의 크기 정보를 select
+	public CommonCodeGroupVO commonCodeGroupList(CommonCodeGroupVO commonCodeGroupVO) -->
+    <select id="commonCodeGroupList" parameterType="commonCodeGroupVO" resultMap="commonCodeGroupMap">
+    	SELECT A.COMM_CODE_GRP_NO, A.COMM_CODE_GRP_NM
+		     , B.COMM_DET_CODE_NO, B.COMM_CODE_GRP_NO, B.COMM_DET_CODE_NM, B.COMM_DET_DESC, B.EXP_PERIOD
+		     , B.USE_YN
+		FROM   COMMON_CODE_GROUP A, COMMON_DETAIL_CODE B
+		WHERE  A.COMM_CODE_GRP_NO = B.COMM_CODE_GRP_NO
+		AND    A.COMM_CODE_GRP_NO = #{commCodeGrpNo}
+		AND	   B.USE_YN = 'Y'
+    </select>
+  
+</mapper>

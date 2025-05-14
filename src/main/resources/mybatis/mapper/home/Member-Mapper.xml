@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.mapper.MemberMapper">
+	<!-- 회원가입 -->
+	<insert id="signUp" parameterType="com.ohot.vo.MemberVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="memNo">
+			SELECT NVL(MAX(MEM_NO),0)+1 AS "신규 회원번호"
+			FROM MEMBER
+		</selectKey>
+		INSERT INTO MEMBER ( MEM_NO, MEM_LAST_NAME, MEM_FIRST_NAME
+		                   , MEM_NICKNM, MEM_EMAIL, MEM_TELNO
+		                    , MEM_BIRTH, MEM_PSWD, SNS_MEM_YN)
+		VALUES(#{memNo}, #{memLastName}, #{memFirstName}
+				, #{memNicknm}, #{memEmail}, #{memTelno}
+				, #{memBirth}, #{memPswd}, #{snsMemYn} )
+	</insert>
+	
+	<!-- 기본으로 ROLD_MEM 권한 insert	-->
+	<insert id="insertAuth" parameterType="com.ohot.vo.MemberVO">
+		/*com.ohot.mapper.MemberMapper.insertAuth*/
+		INSERT INTO auth(mem_no)
+		VALUES (#{memNo})
+	</insert>
+	
+	<select id="findByEmail" parameterType="string" resultMap="memberMap">
+   		/*com.ohot.mapper.MemberMapper.findByEmail*/
+	    SELECT 
+	    		m.mem_no, m.mem_last_name, m.mem_first_name, m.mem_nicknm
+	            , m.mem_email, m.mem_telno, m.mem_birth, m.mem_pswd, m.join_ymd
+	            , m.secsn_ymd, m.mem_access_token, m.enabled
+	            , m.mem_stat_sec_code_no, m.mem_sec_code_no, m.mem_del_yn
+	            , a.mem_no, a.auth_nm
+	     FROM   member m, auth a
+	    WHERE   m.mem_no = a.mem_no
+	      AND   mem_email = #{memEmail}
+	      AND   mem_stat_sec_code_no != '002'
+	      AND   m.mem_del_yn = 'N'
+	</select>
+	
+	<resultMap type="com.ohot.vo.MemberVO" id="memberMap">
+		<result property="rrnum" column="RRNUM"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="memLastName" column="MEM_LAST_NAME"/>
+		<result property="memFirstName" column="MEM_FIRST_NAME"/>
+		<result property="memNicknm" column="MEM_NICKNM"/>
+		<result property="memEmail" column="MEM_EMAIL"/>
+		<result property="memTelno" column="MEM_TELNO"/>
+		<result property="memBirth" column="MEM_BIRTH"/>
+		<result property="memPswd" column="MEM_PSWD"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="secsnYmd" column="SECSN_YMD"/>
+		<result property="memAccessToken" column="MEM_ACCESS_TOKEN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="memStatSecCodeNo" column="MEM_STAT_SEC_CODE_NO"/>
+		<result property="memSecCodeNo" column="MEM_SEC_CODE_NO"/>
+		<result property="memDelYn" column="MEM_DEL_YN"/>
+		<result property="authNm" column="AUTH_NM"/>
+		<result property="snsMemYn" column="SNS_MEM_YN"/>
+		<result property="fullName" column="fullName"/>
+		<association property="artistVO" resultMap="artistMap"></association>
+		<collection property="authVOList" resultMap="authMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.ArtistVO" id="artistMap">
+		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="artExpln" column="ART_EXPLN"/>
+		<result property="artRegYmd" column="ART_REG_YMD"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="artDelYn" column="ART_DEL_YN"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.AuthVO" id="authMap">
+		<result property="memNo" column="MEM_NO"/>
+		<result property="authNm" column="AUTH_NM"/>
+	</resultMap>
+	
+	<!-- 회원 조회 -->
+	<select id="memberList" resultType="com.ohot.vo.MemberVO">
+		SELECT MEM_NO, MEM_LAST_NAME, MEM_FIRST_NAME, MEM_NICKNM, MEM_EMAIL, REGEXP_REPLACE(MEM_TELNO, '(.{3})(.{4})(.{4})', '\1-\2-\3') AS MEM_TELNO
+			  , REGEXP_REPLACE(MEM_BIRTH, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS MEM_BIRTH, MEM_PSWD
+			  , REGEXP_REPLACE(JOIN_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS JOIN_YMD
+			  , REGEXP_REPLACE(SECSN_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS SECSN_YMD
+			  , MEM_ACCESS_TOKEN, ENABLED, MEM_STAT_SEC_CODE_NO, MEM_SEC_CODE_NO, MEM_DEL_YN
+		FROM MEMBER
+		AND MEM_DEL_YN = 'N'
+	</select>
+	
+	<!-- 회원 검색 조회 -->
+	<select id="memberSearchList" resultMap="memberMap" parameterType="hashMap">
+		SELECT S.*
+		FROM (
+		    SELECT ROW_NUMBER() OVER(ORDER BY T.RNUM DESC) RRNUM, T.*
+		    FROM (
+		        SELECT ROW_NUMBER() OVER(ORDER BY MEM_NO ASC) AS RNUM
+		              , mem_no
+		              , mem_last_name
+		              , mem_first_name
+		              , mem_nicknm
+		              , mem_email
+		              , REGEXP_REPLACE(mem_telno, '(.{3})(.{4})(.{4})', '\1-\2-\3') AS mem_telno
+		              , TO_CHAR(TO_DATE(mem_birth), 'YYYY-MM-DD') AS mem_birth
+		              , TO_CHAR(TO_DATE(join_ymd), 'YYYY-MM-DD') AS join_ymd
+		              , TO_CHAR(TO_DATE(secsn_ymd), 'YYYY-MM-DD') AS secsn_ymd
+		              , FN_CODE_NO_TO_CODE_NM(mem_stat_sec_code_no) AS mem_stat_sec_code_no
+		              , FN_CODE_NO_TO_CODE_NM(mem_sec_code_no) AS mem_sec_code_no
+		              , mem_del_yn
+		              , sns_mem_yn
+		              , mem_last_name || mem_first_name AS fullName
+		        FROM MEMBER
+		        WHERE 1 = 1
+		        <if test="fullName != null and fullName != ''">
+		            AND LOWER(mem_last_name || mem_first_name) LIKE '%' || LOWER(#{fullName}) || '%'
+		        </if>
+		
+		        <if test="memNicknm != null and memNicknm != ''">
+		            AND mem_nicknm LIKE '%' || #{memNicknm} || '%'
+		        </if>
+		
+		        <if test="memEmail != null and memEmail != ''">
+		            AND mem_email LIKE '%' || #{memEmail} || '%'
+		        </if>
+		
+		        <if test="memTelno != null and memTelno != ''">
+		            AND mem_telno LIKE '%' || #{memTelno} || '%'
+		        </if>
+		
+		        <if test="memBirth != null and memBirth != ''">
+		            AND mem_birth LIKE '%' || #{memBirth} || '%'
+		        </if>
+		
+		        <if test="startDate != null and startDate != ''">
+		            AND TO_DATE(join_ymd, 'YYYY-MM-DD') <![CDATA[ >= ]]> TO_DATE(#{startDate}, 'YYYY-MM-DD')
+		        </if>
+		        <if test="endDate != null and endDate != ''">
+		            AND TO_DATE(join_ymd, 'YYYY-MM-DD')  <![CDATA[ <= ]]> TO_DATE(#{endDate}, 'YYYY-MM-DD')
+		        </if>
+		        <if test="secsnYmd != null and secsnYmd != ''">
+		            AND secsn_ymd LIKE '%' || #{secsnYmd} || '%'
+		        </if>
+		        <if test="snsMemYn != null and snsMemYn != '' and snsMemYn != 'all'">
+		            AND sns_mem_yn = #{snsMemYn}
+		        </if>
+		        <if test="memStatSecCodeNo != null and memStatSecCodeNo != '' and memStatSecCodeNo != 'all'">
+		            AND mem_stat_sec_code_no = #{memStatSecCodeNo}
+		        </if>
+		        <if test="memSecCodeNo != null and memSecCodeNo != '' and memSecCodeNo != 'all'">
+		            AND mem_sec_code_no = #{memSecCodeNo}
+		        </if>
+		
+		    ) T
+		) S
+		WHERE RRNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<sql id="where">
+		<if test="keyword!=null and keyword!=''">
+			AND (
+			 	<choose>
+			 		<when test="mode=='memEmail'">
+			 			 MEM_EMAIL LIKE '%' || #{keyword} || '%'
+			 		</when>
+			 		<when test="mode=='memBirth'">
+			 			 MEM_BIRTH LIKE '%' || #{keyword} || '%'
+			 		</when>
+			 		<otherwise>
+			 			(MEM_EMAIL LIKE '%' || #{keyword} || '%' OR MEM_BIRTH LIKE '%' || #{keyword} || '%')
+			 		</otherwise>
+			 	</choose>
+		 	)
+		</if>
+		
+		<!-- 회원 유형 추가  -->
+		<if test="memberType!=null and memberType!=''">
+			AND MEM_SEC_CODE_NO = #{memberType}
+		</if>		
+	</sql>
+	
+	<select id="memberDetail" parameterType="com.ohot.vo.MemberVO">
+		SELECT MEM_NO, MEM_LAST_NAME, MEM_FIRST_NAME, MEM_NICKNM, MEM_EMAIL, REGEXP_REPLACE(MEM_TELNO, '(.{3})(.{4})(.{4})', '\1-\2-\3') AS MEM_TELNO
+			  , REGEXP_REPLACE(MEM_BIRTH, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS MEM_BIRTH, MEM_PSWD
+			  , REGEXP_REPLACE(JOIN_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS JOIN_YMD
+			  , REGEXP_REPLACE(SECSN_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS SECSN_YMD
+			  , MEM_ACCESS_TOKEN, ENABLED, MEM_STAT_SEC_CODE_NO, MEM_SEC_CODE_NO
+			  , MEM_DEL_YN
+		FROM MEMBER
+		WHERE MEM_NO = #{memNo}
+		AND MEM_DEL_YN = 'N'
+	</select>
+	
+	
+	<update id="memberUpdate" parameterType="com.ohot.vo.MemberVO">
+		UPDATE MEMBER
+		   SET MEM_LAST_NAME = #{memLastName}
+		   	   , MEM_FIRST_NAME = #{memFirstName}
+		   	   , MEM_NICKNM = #{memNicknm}
+		   	   , MEM_EMAIL = #{memEmail}
+		   	   , MEM_TELNO = #{memTelno}
+			   , MEM_BIRTH = #{memBirth}
+			   , JOIN_YMD = #{joinYmd}
+			   <if test="secsnYmd != null and secsnYmd != ''">
+			   , SECSN_YMD = #{secsnYmd}
+			   </if>
+			   , MEM_STAT_SEC_CODE_NO = #{memStatSecCodeNo}
+			   , MEM_SEC_CODE_NO = #{memSecCodeNo}
+		 WHERE MEM_NO = #{memNo}
+	</update>
+	
+	<select id="getTotalMember" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		  FROM MEMBER
+		 WHERE 1 = 1
+		<if test="memNo != null and memNo != ''">
+		    AND mem_no LIKE '%' || #{memNo} || '%'
+		</if>
+		
+		<if test="fullName != null and fullName != ''">
+		    AND LOWER(mem_last_name || mem_first_name) LIKE '%' || LOWER(#{fullName}) || '%'
+		</if>
+		
+		<if test="memNicknm != null and memNicknm != ''">
+		    AND mem_nicknm LIKE '%' || #{memNicknm} || '%'
+		</if>
+		
+		<if test="memEmail != null and memEmail != ''">
+		    AND mem_email LIKE '%' || #{memEmail} || '%'
+		</if>
+		
+		<if test="memTelno != null and memTelno != ''">
+		    AND mem_telno LIKE '%' || #{memTelno} || '%'
+		</if>
+		
+		<if test="memBirth != null and memBirth != ''">
+		    AND mem_birth LIKE '%' || #{memBirth} || '%'
+		</if>
+		
+		<if test="startDate != null and startDate != ''">
+		    AND TO_DATE(join_ymd, 'YYYY-MM-DD') <![CDATA[ >= ]]> TO_DATE(#{startDate}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDate != null and endDate != ''">
+		    AND TO_DATE(join_ymd, 'YYYY-MM-DD')  <![CDATA[ <= ]]> TO_DATE(#{endDate}, 'YYYY-MM-DD')
+		</if>
+		<if test="secsnYmd != null and secsnYmd != ''">
+		    AND secsn_ymd LIKE '%' || #{secsnYmd} || '%'
+		</if>
+		<if test="snsMemYn != null and snsMemYn != '' and snsMemYn != 'all'">
+		    AND sns_mem_yn = #{snsMemYn}
+		</if>
+		<if test="memStatSecCodeNo != null and memStatSecCodeNo != '' and memStatSecCodeNo != 'all'">
+		    AND mem_stat_sec_code_no = #{memStatSecCodeNo}
+		</if>
+		<if test="memSecCodeNo != null and memSecCodeNo != '' and memSecCodeNo != 'all'">
+		    AND mem_sec_code_no = #{memSecCodeNo}
+		 </if>		  
+	</select>
+	
+	<update id="memberDelete" parameterType="int">
+		UPDATE MEMBER
+		   SET MEM_DEL_YN = 'Y'
+		 WHERE MEM_NO = #{memNo}
+	</update>
+	
+	<update id="authUpdate" parameterType="com.ohot.vo.MemberVO">
+		UPDATE AUTH
+		   SET AUTH_NM = 'ROLE_ART'
+		 WHERE MEM_NO = #{memNo}
+	</update>
+	
+	<!-- 멤버테이블 정보도 가지고 있는 아티스트 회원 상세조회 모달에 뿌려줄 것 
+	edit->memberVO : MemberVO(rnum=0, memNo=12, memLastName=null, memFirstName=null, memNicknm=null
+		 , memEmail=null, memTelno=null, memBirth=null, memPswd=null, joinYmd=null, secsnYmd=null
+		 , memAccessToken=null, enabled=0, memStatSecCodeNo=null, memSecCodeNo=null, memDelYn=null
+		 , authNm=null, authVOList=null, artistVO=null)
+		 
+	memNo : 회원 번호(아티스트, 일반)
+	artNo : 아티스트 번호
+	memNo = artNo ? 다름
+	
+	* 일반 회원 : 회원 번호는 1개
+	* 아티스트 : 회원 번호 + 아티스트 번호(회원 번호 : 아티스트 번호 = 1 : 1)
+	* 아티스트가 로그인 할 때 회원 번호로 로그인 함
+	 -->
+	<select id="modalDetailInfo" resultMap="memberMap" >
+		SELECT  M.MEM_NO, M.MEM_LAST_NAME, M.MEM_FIRST_NAME, M.MEM_NICKNM, M.MEM_EMAIL
+		, REGEXP_REPLACE(M.MEM_TELNO, '(.{3})(.{4})(.{4})', '\1-\2-\3') AS MEM_TELNO
+		, REGEXP_REPLACE(M.MEM_BIRTH, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS MEM_BIRTH
+        , REGEXP_REPLACE(M.JOIN_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS JOIN_YMD
+        , REGEXP_REPLACE(M.SECSN_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS SECSN_YMD, M.MEM_STAT_SEC_CODE_NO, M.MEM_SEC_CODE_NO, M.MEM_DEL_YN
+        , A.ART_NO, A.ART_GROUP_NO, A.ART_ACT_NM, A.ART_EXPLN, REGEXP_REPLACE(A.ART_REG_YMD, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS ART_REG_YMD 
+        , A.FILE_GROUP_NO, A.ART_DEL_YN
+        , FG.FILE_REGDATE
+        , FD.FILE_SN, FD.FILE_ORIGINAL_NAME, FD.FILE_SAVE_NAME, FD.FILE_SAVE_LOCATE, FD.FILE_SIZE, FD.FILE_EXT
+        , FD.FILE_MIME, FD.FILE_FANCYSIZE, FD.FILE_SAVE_DATE, FD.FILE_DOWNCOUNT
+		FROM MEMBER M 
+		    LEFT OUTER JOIN ARTIST A ON(M.MEM_NO = A.MEM_NO)
+		    LEFT OUTER JOIN FILE_GROUP FG ON(A.FILE_GROUP_NO = FG.FILE_GROUP_NO)
+		    LEFT OUTER JOIN (
+		         SELECT FILE_SN, FILE_GROUP_NO, FILE_ORIGINAL_NAME, FILE_SAVE_NAME
+		                , FILE_SAVE_LOCATE, FILE_SIZE, FILE_EXT, FILE_MIME, FILE_FANCYSIZE
+		                , FILE_SAVE_DATE, FILE_DOWNCOUNT, ROW_NUMBER() OVER (PARTITION BY FILE_GROUP_NO ORDER BY FILE_SN DESC) AS RN
+		         FROM FILE_DETAIL
+		    ) FD ON FG.FILE_GROUP_NO = FD.FILE_GROUP_NO AND FD.RN = 1
+		WHERE 1 = 1
+		<if test="memNo!=0 and memNo!=null">
+			AND M.MEM_NO = #{memNo}		
+		</if>
+		ORDER BY ART_NO DESC
+	</select>
+	
+	<update id="memberCancle" parameterType="com.ohot.vo.MemberVO">
+		UPDATE member
+		   SET secsn_ymd = TO_CHAR(SYSDATE,'YYYYMMDD')
+		 WHERE mem_no = #{memNo}	
+	</update>
+	
+	<delete id="authDelete" parameterType="com.ohot.vo.MemberVO">
+		DELETE FROM auth
+		 WHERE mem_no = #{memNo}
+	</delete>
+	
+	
+	<!-- 홈에서 필요한 xml 시작 -->
+	
+	<resultMap type="com.ohot.vo.ArtistGroupVO" id="artistGroupMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="totalCnt" column="TOTAL_CNT"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupDebutYmd" column="ART_GROUP_DEBUT_YMD"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupNmKo" column="ART_GROUP_NM_KO"/>
+		<result property="artGroupExpln" column="ART_GROUP_EXPLN"/>
+		<result property="artGroupRegYmd" column="ART_GROUP_REG_YMD"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="logoFileGroupNo" column="LOGO_FILE_GROUP_NO"/>
+		<result property="fileLogoSaveLocate" column="FILE_LOGO_SAVE_LOCATE"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+		<collection property="goodsVOList" resultMap="goodsMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.GoodsVO" id="goodsMap">
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="unitPrice" column="UNIT_PRICE"/>
+		<result property="expln" column="EXPLN"/>
+		<result property="pic" column="PIC"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="rrnum" column="RRNUM"/>
+	    <association property="fileGroupVO"  resultMap="fileGroupMap"/>
+	    <collection property="ticketVO" resultMap="ticketMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.TicketVO" id="ticketMap">
+		<result property="posterFile" column="POSTER_FILE"/>
+		<result property="tkVprice" column="TK_VPRICE"/>
+		<result property="tkRprice" column="TK_RPRICE"/>
+		<result property="tkSprice" column="TK_SPRICE"/>
+		<result property="tkNo" column="TK_NO"/>
+		<result property="tkCtgr" column="TK_CTGR"/>
+		<result property="tkLctn" column="TK_LCTN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="tkStartYmd" column="TK_START_YMD"/>
+		<result property="tkFinishYmd" column="TK_FINISH_YMD"/>
+		<result property="tkFileSaveLocate" column="TK_FILE_SAVE_LOCATE"/>
+	</resultMap>
+	
+	<!-- 동적쿼리를 이용한 그룹 리스트(가입한 그룹정보 & 가입 안 한 그룹정보 & 전체그룹정보) -->
+	<select id="getArtistGroupList" parameterType="hashmap" resultMap="artistGroupMap">
+	/* com.ohot.mapper.MemberMapper.artistGroupList */
+	
+	<include refid="fileDetail"/>
+	
+	<if test="start !=null and start != ''" >
+		<include refid="pagingHeader"/>
+	</if>
+	
+		SELECT  
+				ROW_NUMBER() OVER (ORDER BY  ag.art_group_nm) AS rnum
+				, COUNT(1) OVER() AS total_cnt
+				, ag.art_group_no
+		        , ag.art_group_debut_ymd
+		        , ag.art_group_nm
+		        , ag.art_group_nm_ko
+		        , ag.art_group_expln
+		        , REGEXP_REPLACE(ag.art_group_reg_ymd, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS art_group_reg_ymd
+		        , ag.art_group_del_yn
+		        , fg.file_regdate
+		        , fd.*
+		        , 	(
+		            SELECT f.file_save_locate
+		              FROM file_detail f
+		             WHERE f.file_group_no = ag.logo_file_group_no 
+		              ) AS file_logo_save_locate
+		FROM artist_group ag 
+		LEFT OUTER JOIN file_group fg ON (ag.file_group_no = fg.file_group_no)
+		LEFT OUTER JOIN fd ON fg.file_group_no = fd.file_group_no AND fd.rn = 1
+		WHERE ag.art_group_no != 0
+		AND ag.art_group_del_yn = 'N'
+		<if test="join != null">
+			<if test="join.equals('yes') and memNo != null"> <!-- 가입한 그룹 리스트 조건 -->
+			AND ag.art_group_no IN (SELECT art_group_no
+			                        FROM community_profile
+			                        WHERE mem_no = #{memNo}
+			                        AND com_delyn = 'N'
+	                        )
+			</if>
+			<if test="join.equals('no') and memNo != null"> <!-- 가입하지 않은 그룹 리스트 조건 -->
+			AND ag.art_group_no NOT IN (SELECT art_group_no
+				                        FROM community_profile
+				                        WHERE mem_no = #{memNo}
+			                        	AND com_delyn = 'N'
+                        			)
+			</if>
+			<if test="artGroupNo != null">
+				AND ag.art_group_no = #{artGroupNo}
+			</if>
+		</if>
+		<if test="keyword != null">
+			AND (
+	            LOWER(ag.art_group_nm) LIKE '%' || LOWER(#{keyword}) || '%'
+	            OR LOWER(ag.art_group_nm_ko) LIKE '%' || LOWER(#{keyword}) || '%'
+	          )
+		</if>
+		<choose>
+			<when test="orderby!=null and orderby.equals('random')">
+				ORDER BY DBMS_RANDOM.RANDOM
+			</when>
+			<otherwise>
+				ORDER BY ag.art_group_nm
+			</otherwise>
+		</choose>
+		
+		<!-- 페이징 처리 푸터 -->
+		<if test="start !=null and start != ''" >
+			<include refid="pagingFooter"/>
+		</if>
+	</select>
+
+	<!-- 가입한 그룹 중 굿즈가 있는 그룹 리스트 조회 -->
+	<select id="getArtWithGoods" parameterType="int" resultType="com.ohot.vo.ArtistGroupVO">
+	/* com.ohot.mapper.MemberMapper.getArtWithGoods */
+		SELECT DISTINCT ag.art_group_no, ag.art_group_nm
+		FROM artist_group ag
+		JOIN goods g ON ag.art_group_no = g.art_group_no
+		WHERE g.gds_del_yn = 'N'
+		AND ag.art_group_del_yn = 'N'
+		AND ag.art_group_no IN (SELECT art_group_no
+			                        FROM community_profile
+			                        WHERE mem_no = #{memNo}
+			                        AND com_delyn = 'N'
+			                        )
+		ORDER BY ag.art_group_nm
+	</select>
+	<!-- 가입한 그룹의 굿즈 상품 조회 -->
+	<select id="getGoodsList" parameterType="hashmap" resultMap="goodsMap" >
+	/* com.ohot.mapper.MemberMapper.getGoodsList */
+		<!-- 파일 정보 서브쿼리 (WITH절)  -->
+		<include refid="fileDetail"/>
+		<!-- 페이징처리 헤더  -->
+		<include refid="pagingHeader"/>
+		
+		SELECT  
+				ROW_NUMBER() OVER (ORDER BY  g.reg_dt DESC) AS rnum
+				, ag.art_group_no
+		        , ag.art_group_nm
+                , g.gds_no, g.gds_type, g.gds_nm, g.unit_price, g.expln, g.pic, g.reg_dt
+                , g.comm_code_grp_no, g.art_no, g.file_group_no AS goods_file_group_no, g.qty, g.gds_del_yn
+                , goodsFG.file_regdate
+                , fd.*
+                , (SELECT f.file_save_locate
+                     FROM file_detail f
+                    WHERE f.file_group_no = t.poster_file
+                   ) AS tk_file_save_locate
+		FROM artist_group ag 
+        LEFT OUTER JOIN goods g ON (ag.art_group_no = g.art_group_no AND g.gds_del_yn = 'N')
+        LEFT OUTER JOIN file_group goodsFG ON (g.file_group_no = goodsFG.file_group_no)
+        LEFT OUTER JOIN fd ON goodsFG.file_group_no = fd.file_group_no AND fd.rn = 1
+        LEFT OUTER JOIN TICKET  t ON (g.gds_no= t.gds_no)
+		WHERE ag.art_group_no != 0
+		AND ag.art_group_del_yn = 'N'
+		<if test="memNo != null and memNo != ''">
+		AND ag.art_group_no IN (SELECT art_group_no
+	                        FROM community_profile
+	                        WHERE mem_no = #{memNo}
+	                        AND com_delyn = 'N'
+	                        )
+		</if>
+        AND g.gds_no != 0
+        <if test="artGroupNo != null and artGroupNo != ''">
+        	AND ag.art_group_no = #{artGroupNo}
+        </if>
+     	<include refid="pagingFooter"/>
+	</select>
+	
+	
+	<!-- 핸드폰 번호 중복 체크 -->
+	<select id="phoneDuplCheck" parameterType="String" resultType="com.ohot.vo.MemberVO">
+	/* com.ohot.mapper.MemberMapper.phoneDuplCheck */
+		 SELECT  mem_no, mem_last_name, mem_first_name
+		        , mem_nicknm, mem_email, mem_telno, mem_birth
+		        , mem_pswd, join_ymd, secsn_ymd, mem_access_token
+		        , enabled, mem_stat_sec_code_no, mem_sec_code_no
+		        , mem_del_yn, sns_mem_yn
+		  FROM  member
+		 WHERE  mem_stat_sec_code_no != '002'
+           AND  mem_del_yn = 'N'
+		   AND  mem_telno = #{memTelno}
+	</select>
+	
+	<!-- 닉네임 중복 체크 -->
+	<select id="nickDuplCheck" parameterType="String" resultType="com.ohot.vo.MemberVO">
+	/* com.ohot.mapper.MemberMapper.nickDuplCheck */
+		SELECT mem_no, mem_last_name, mem_first_name
+		        , mem_nicknm, mem_email, mem_telno, mem_birth
+		        , mem_pswd, join_ymd, secsn_ymd, mem_access_token
+		        , enabled, mem_stat_sec_code_no, mem_sec_code_no
+		        , mem_del_yn, sns_mem_yn
+		FROM member
+		WHERE mem_stat_sec_code_no != '002'
+		AND mem_nicknm = #{memNicknm}
+	</select>
+	
+	<update id="editInfo" parameterType="hashmap">
+	/* com.ohot.mapper.MemberMapper.editInfo */
+		UPDATE member
+		<set>
+			<if test="memLastName != null and memLastName != '' and memFirstName != null and memFirstName != ''">
+		        MEM_LAST_NAME = #{memLastName}
+		        , MEM_FIRST_NAME = #{memFirstName}
+			</if>
+			<if test="memNicknm!=null and memNicknm!='' ">
+		        MEM_NICKNM = #{memNicknm}
+			</if>
+		    <if test="memTelno!=null and memTelno!='' ">
+		        MEM_TELNO = #{memTelno}
+		    </if>
+		    <if test="memPswd!=null and memPswd!='' ">    
+		        MEM_PSWD = #{memPswd}
+		    </if>
+		</set> 	
+		WHERE   mem_no = #{memNo}
+	</update>
+	
+	<!-- 홈에서 필요한 xml 끝 -->
+	
+	<!-- SQL 시작 -->
+	<sql id="fileDetail">
+	  WITH fd AS (
+	    SELECT file_sn
+	         , file_group_no
+	         , file_original_name
+	         , file_save_name
+	         , file_save_locate
+	         , file_size
+	         , file_ext
+	         , file_mime
+	         , file_fancysize
+	         , file_save_date
+	         , file_downcount
+	         , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS rn
+	    FROM file_detail
+	  )
+	</sql>
+	
+	<sql id="pagingHeader">
+       SELECT p.*
+         FROM 
+              (
+	</sql>
+	
+	<sql id="pagingFooter">
+	
+		) p
+	        WHERE p.rnum BETWEEN #{start} AND #{end}
+	</sql>
+	<!-- SQL 끝 -->
+</mapper>

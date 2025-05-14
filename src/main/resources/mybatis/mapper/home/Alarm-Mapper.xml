@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.alarm.mapper.AlarmMapper">
+
+	<select id="empCheckEnum" parameterType="long">
+		SELECT COUNT(NOTI_READ_ENUM)
+		FROM NOTIFICATION
+		WHERE 1=1
+		AND NOTI_READ_ENUM ='N'
+		AND NOTI_RCVR_NO =#{empNo}
+	</select>
+	
+	<update id="empReadEnum" parameterType="long">
+		UPDATE NOTIFICATION
+		SET NOTI_READ_ENUM='Y'
+		WHERE 1=1
+		AND NOTI_RCVR_NO =#{empNo}
+	</update>
+
+	<select id="empDetailList" parameterType="long" resultType="com.ohot.home.alarm.vo.NotificationVO">
+		SELECT
+			    noti_no,
+			    TO_CHAR(noti_dt, 'YYYY-MM-DD HH24:MI:SS') AS noti_dt,
+			    noti_sndr_no AS emp_noti_sndr_no,
+			    noti_rcvr_no AS emp_noti_rcvr_no,
+			    noti_cn,
+			    emp_org_no,
+			    noti_org_tb
+		FROM notification n
+		WHERE 1=1
+		AND noti_rcvr_no = #{memNo}
+		AND noti_dt >= SYSDATE -3
+		AND noti_org_tb='ATRZ_LINE'
+		ORDER BY noti_dt DESC
+		FETCH FIRST 20 ROWS ONLY 
+	</select>
+
+	<select id="checkEnum" parameterType="int" resultType="int">
+		SELECT COUNT(NOTI_READ_ENUM)
+		FROM NOTIFICATION
+		WHERE 1=1
+		AND NOTI_READ_ENUM ='N'
+		AND NOTI_RCVR_NO =#{memNo}
+	</select>
+
+	<update id="updateReadEnum" parameterType="int">
+		UPDATE NOTIFICATION
+		SET NOTI_READ_ENUM='Y'
+		WHERE 1=1
+		AND NOTI_RCVR_NO =#{memNo}
+	</update>
+
+	<update id="savePersonalStng">
+		UPDATE noti_stng
+		SET		
+			bd_stng_yn =#{bdStngYn}
+			, lp_stng_yn =#{lpStngYn}
+			, lv_stng_yn =#{lvStngYn}
+			, lk_stng_yn =#{lkStngYn}
+			, me_stng_yn =#{meStngYn}
+		WHERE com_profile_no = #{comProfileNo}
+	</update>
+
+	<select id="personalStng" parameterType="int" resultType="com.ohot.home.alarm.vo.NotiStngVO">
+		SELECT 
+				com_profile_no
+				, mem_no
+				, bd_stng_yn
+				, lp_stng_yn
+				, lv_stng_yn
+				, lk_stng_yn
+				, me_stng_yn
+				, art_group_no
+		  FROM noti_stng
+		 WHERE com_profile_no =#{comProfileNo}
+ 	</select>
+
+	<insert id="alarmReply" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+		INSERT INTO NOTIFICATION(
+								NOTI_NO
+								, NOTI_DT
+								, NOTI_SNDR_NO
+								, NOTI_RCVR_NO
+								, NOTI_CN
+								, NOTI_ORG_NO
+								, NOTI_ORG_TB
+		)
+		
+		SELECT 
+				NOTIFICATION_SEQ.NEXTVAL
+				,SYSDATE
+				,#{artGroupNo}
+				,mem_no
+				,('💭 '||#{comNm}||'님이 ['||SUBSTR(#{replyContent}, 1, 10)||'] 댓글을 작성했습니다')
+				,#{replyNo}
+				,'COMMUNITY_REPLY'
+		 FROM  NOTI_STNG 
+		 WHERE art_group_no = #{artGroupNo}
+		 AND lp_stng_yn ='Y'
+	</insert>
+	
+	<insert id="empAlarmInsert" parameterType="com.ohot.home.alarm.vo.NotificationVO">
+		INSERT INTO NOTIFICATION(
+			NOTI_NO
+			, NOTI_DT
+			, NOTI_SNDR_NO
+			, NOTI_RCVR_NO
+			, NOTI_CN
+			, NOTI_ORG_TB
+			, EMP_ORG_NO
+		)
+		VALUES( 
+				NOTIFICATION_SEQ.NEXTVAL
+				,SYSDATE
+				,#{empNotiSndrNo}
+				,#{empNotiRcvrNo}
+				,#{notiCn} || '이(가) 도착했습니다'
+				,'ATRZ_LINE'
+				,#{empOrgNo})
+		
+	</insert>
+
+	<insert id="alarmComPost" parameterType="com.ohot.home.community.vo.CommunityPostVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="notiNo">
+				SELECT NVL(MAX(NOTI_NO),0)+1 FROM NOTIFICATION
+		</selectKey>
+		INSERT INTO NOTIFICATION(
+								NOTI_NO
+								, NOTI_DT
+								, NOTI_SNDR_NO
+								, NOTI_RCVR_NO
+								, NOTI_CN
+								, NOTI_ORG_NO
+								, NOTI_ORG_TB
+		)
+		
+		SELECT 
+				NOTIFICATION_SEQ.NEXTVAL
+				,SYSDATE
+				,#{artGroupNo}
+				,mem_no
+				,('📝 '||#{comNm}||'님이 ['||SUBSTR(#{boardTitle}, 1, 10)||'] 포스트를 등록했습니다')
+				,#{boardNo}
+				,'COMMUNITY_POST'
+		 FROM  NOTI_STNG 
+		 WHERE art_group_no = #{artGroupNo}
+		 AND bd_stng_yn ='Y'
+	</insert>
+
+	<select id="registeredGroupList" parameterType="int" resultType="com.ohot.vo.ArtistGroupVO">
+		SELECT
+		    	art_group_no,
+		    	art_group_nm
+                
+		FROM artist_group ag
+		WHERE 1=1
+		AND art_group_no >=1
+		AND art_group_del_yn='N'
+		AND art_group_no IN (
+						        SELECT cp.art_group_no
+						        FROM community_profile cp
+						        WHERE cp.mem_no = #{memNo}
+						        AND cp.com_delyn='N'
+						        AND cp.com_auth = 'ROLE_MEM'
+						    )
+		ORDER BY art_group_nm
+	</select>
+	
+	<select id="forRealTimeAlarm" parameterType="com.ohot.home.alarm.vo.NotificationVO" resultType="com.ohot.home.alarm.vo.NotificationVO">
+		SELECT
+	        noti_no,
+	        TO_CHAR(noti_dt, 'YYYY-MM-DD HH24:MI:SS') AS noti_dt,
+	        noti_sndr_no,
+	        noti_rcvr_no,
+	        noti_cn,
+	        noti_org_no,
+	        noti_org_tb,
+	        (
+	        SELECT file_save_locate
+	        FROM (
+	            SELECT fd.file_save_locate
+	            FROM file_detail fd
+	            JOIN artist_group a ON fd.file_group_no = a.file_group_no
+	            WHERE a.art_group_no = n.noti_sndr_no
+	            ORDER BY fd.file_sn DESC
+	        )
+	        WHERE ROWNUM = 1
+	    ) AS file_save_locate
+	FROM notification n
+	WHERE 1=1
+	and noti_org_no=#{notiOrgNo}
+	AND noti_sndr_no = #{notiSndrNo}
+	and noti_org_tb=#{notiOrgTb}
+	</select>
+	
+	<select id="alarmDetailList" resultType="com.ohot.home.alarm.vo.NotificationVO">
+		SELECT
+			    noti_no,
+			    TO_CHAR(noti_dt, 'YYYY-MM-DD HH24:MI:SS') AS noti_dt,
+			    noti_sndr_no,
+			    noti_rcvr_no,
+			    noti_cn,
+			    noti_org_no,
+			    noti_org_tb,
+			    (SELECT board_delyn
+				 FROM community_post cp
+				 WHERE cp.board_no=n.noti_org_no) as BOARD_DELYN,
+                (SELECT reply_delyn
+				 FROM COMMUNITY_REPLY cr
+				 WHERE BOARD_NO=cr.BOARD_NO
+                 and cr.reply_no = n.noti_org_no) as REPLY_DELYN,
+			    (SELECT DISTINCT BOARD_NO
+			  	 FROM COMMUNITY_REPLY CR
+				 WHERE CR.REPLY_NO =N.noti_org_no
+				 FETCH FIRST 1 ROWS ONLY) AS BOARD_NO,
+			    (
+		        SELECT file_save_locate
+		        FROM (
+		            SELECT fd.file_save_locate
+		            FROM file_detail fd
+		            JOIN artist_group a ON fd.file_group_no = a.file_group_no
+		            WHERE a.art_group_no = n.noti_sndr_no
+		            ORDER BY fd.file_sn DESC
+		        )
+		        WHERE ROWNUM = 1
+		    ) AS file_save_locate
+		FROM notification n
+		WHERE 1=1
+		AND noti_rcvr_no = #{memNo}
+		AND noti_dt >= SYSDATE -3
+		<if test="artGroupNo !=0 and artGroupNo !='' and artGroupNo !=null">
+			AND noti_sndr_no = #{artGroupNo}
+		</if>
+		ORDER BY noti_dt DESC
+		FETCH FIRST 20 ROWS ONLY
+	</select>
+
+</mapper>

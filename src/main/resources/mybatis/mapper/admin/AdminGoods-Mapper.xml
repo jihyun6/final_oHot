@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.admin.mapper.AdminGoodsMapper">
+	
+	<insert id="goodsInsert" parameterType="com.ohot.shop.vo.GoodsVO" >
+	 <selectKey resultType="int" order="BEFORE" keyProperty="gdsNo">
+		SELECT NVL(MAX(GDS_NO),0)+1 FROM GOODS
+	</selectKey>
+	 INSERT INTO GOODS(GDS_NO, GDS_TYPE, GDS_NM, UNIT_PRICE, EXPLN, PIC, REG_DT, COMM_CODE_GRP_NO, ART_GROUP_NO, ART_NO, FILE_GROUP_NO, QTY, GDS_DEL_YN)
+	 VALUES(#{gdsNo}, #{gdsType}, #{gdsNm}, #{unitPrice}, #{expln}, #{pic}, SYSDATE, #{commCodeGrpNo}, #{artGroupNo}, #{artNo}, #{fileGroupNo}, 0, 'N')
+	</insert>
+	
+	<insert id="ticketInsert" parameterType="com.ohot.shop.vo.TicketVO">
+		<selectKey resultType="long" order="BEFORE" keyProperty="tkNo">
+			SELECT NVL(MAX(TK_NO),0)+1 FROM TICKET
+		</selectKey>
+		INSERT INTO ticket(
+							tk_no
+							, tk_ctgr
+							, tk_lctn
+							, gds_no
+							, tk_start_ymd
+							, tk_finish_ymd
+							, poster_file
+							, tk_vprice
+							, tk_rprice
+							, tk_sprice
+							,tk_runtime
+							,tk_lctn_address
+							)
+		VALUES(
+				#{tkNo}
+				,#{tkCtgr}
+				,#{tkLctn}
+				,#{gdsNo}
+				,#{tkStartYmd}
+				,#{tkFinishYmd}
+				,#{posterFile}
+				,#{tkVprice}
+				,#{tkRprice}
+				,#{tkSprice}
+				,#{tkRuntime}
+				,#{tkLctnAddress}
+		)
+	</insert>
+	
+
+	<insert id="tkDetailInsert" parameterType="com.ohot.shop.vo.TkDetailVO">
+		INSERT INTO TK_DETAIL ( TK_YMD, TK_ROUND, TK_NO, GDS_NM,TK_DETAIL_NO)
+		VALUES( #{tkYmd}, #{tkRound}, #{tkNo}, #{gdsNm}, TO_NUMBER(#{tkYmd}|| #{tkRound} || '0' || #{tkNo}))
+	</insert>
+	
+	<select id="ticketPosterImg" parameterType="long" resultType="com.ohot.vo.FileDetailVO">
+		SELECT 
+				FILE_SN
+				, FILE_GROUP_NO
+				, FILE_ORIGINAL_NAME
+				, FILE_SAVE_NAME
+				, FILE_SAVE_LOCATE
+				, FILE_SIZE
+				, FILE_EXT
+				, FILE_MIME
+				, FILE_FANCYSIZE
+				, FILE_SAVE_DATE
+				, FILE_DOWNCOUNT
+		FROM FILE_DETAIL
+		WHERE FILE_GROUP_NO=#{fileGroupNo}
+	</select>
+		
+	<select id="ticketList" resultMap="goodsMap">
+		SELECT g.gds_no
+			 , g.gds_type
+			 , g.gds_nm
+			 , g.unit_price
+			 , g.expln
+			 , g.pic
+			 , TO_CHAR(g.reg_dt,'YYYY-MM-DD') AS reg_dt
+			 , g.art_group_no
+			 , g.art_no
+		     , t.tk_no
+		     , t.tk_ctgr
+		     , t.tk_lctn
+		     , TO_CHAR(TO_DATE(t.tk_start_ymd), 'YYYY-MM-DD') AS tk_start_ymd
+		     , TO_CHAR(TO_DATE(t.tk_finish_ymd), 'YYYY-MM-DD') AS tk_finish_ymd
+		     , (SELECT tf.file_save_locate
+		            FROM file_detail tf
+	 	           WHERE tf.file_group_no = t.poster_file) AS tk_file_save_locate
+	 	     , (SELECT a.art_group_nm FROM artist_group a WHERE a.art_group_no = g.art_group_no) AS art_group_nm
+             , (SELECT a.art_act_nm FROM artist a WHERE a.art_no = g.art_no) AS art_act_nm
+		FROM goods g
+		LEFT JOIN ticket t ON g.gds_no = t.gds_no
+		WHERE 1=1
+		AND comm_code_grp_no='GD02'
+		AND gds_del_yn='N'
+		ORDER BY gds_no DESC
+	</select>
+	
+	<select id="tkListSearchPost" resultMap="goodsMap" parameterType="hashMap">
+		SELECT * FROM
+		(
+			SELECT
+				ROWNUM AS RNUM
+				,COUNT(1) OVER() AS total_cnt
+				,TBL.*
+			FROM(
+		
+		SELECT 
+			   g.gds_no
+			 , g.gds_type
+			 , g.gds_nm
+			 , g.unit_price
+			 , g.expln
+			 , g.pic
+			 , TO_CHAR(g.reg_dt,'YYYY-MM-DD') AS reg_dt
+			 , g.art_group_no
+			 , g.art_no
+		     , t.tk_no
+		     , t.tk_ctgr
+		     , t.tk_lctn
+		     , TO_CHAR(TO_DATE(t.tk_start_ymd), 'YYYY-MM-DD') AS tk_start_ymd
+		     , TO_CHAR(TO_DATE(t.tk_finish_ymd), 'YYYY-MM-DD') AS tk_finish_ymd
+		     , (SELECT tf.file_save_locate
+		            FROM file_detail tf
+	 	           WHERE tf.file_group_no = t.poster_file) AS tk_file_save_locate
+	 	     , (SELECT a.art_group_nm FROM artist_group a WHERE a.art_group_no = g.art_group_no) AS art_group_nm
+             , (SELECT a.art_act_nm FROM artist a WHERE a.art_no = g.art_no) AS art_act_nm
+             , (SELECT COUNT(*) *1270
+			    FROM tk_detail td 
+			    WHERE td.tk_no =t.tk_no) AS total_seat_cnt
+			
+			 , (SELECT COUNT(*) 
+			    FROM tk_rsvtn tr 
+			    WHERE tr.tk_detail_no IN (
+			        SELECT td.tk_detail_no 
+			        FROM tk_detail td 
+			        WHERE td.tk_no =t.tk_no
+			    ) 
+			    AND tr.rsvtn_enum = 2) AS rsvt_cnt
+		FROM goods g
+		LEFT JOIN ticket t ON g.gds_no = t.gds_no
+		WHERE 1=1
+		AND comm_code_grp_no='GD02'
+		<if test="artGroupNo != null and artGroupNo != ''">
+			AND g.art_group_no = #{artGroupNo}
+		</if>
+		<if test="artNo != null and artNo != ''">
+			AND g.art_no = #{artNo}
+		</if>
+		
+		<if test="tkCtgr != null and tkCtgr != ''">
+			AND t.tk_ctgr = #{tkCtgr}
+		</if>
+	
+		<if test="tkLctn != null and tkLctn != ''">
+			AND t.tk_lctn LIKE '%' ||  #{tkLctn} || '%'
+		</if>
+	
+		<if test="pic != null and pic != ''">
+			AND g.pic LIKE '%' || #{pic} || '%'
+		</if>
+	
+		<if test="gdsDelYn != null and gdsDelYn != ''">
+			AND g.gds_del_yn = #{gdsDelYn}
+		</if>
+	
+		<if test="gdsNm != null and gdsNm != ''">
+			AND g.gds_nm LIKE '%' || #{gdsNm} || '%'
+		</if>
+	
+		<if test="startDate != null and startDate != ''">
+			AND TO_DATE(t.tk_start_ymd, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+		</if>
+	
+		<if test="endDate != null and endDate != ''">
+			AND TO_DATE(t.tk_finish_ymd, 'YYYY-MM-DD') &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+		</if>
+		ORDER BY g.gds_no DESC
+		
+		) TBL
+		)
+		WHERE RNUM &gt;= #{startRow} AND RNUM &lt;= #{endRow}
+	</select>
+	
+	<select id="tkListCount" resultType="int" parameterType="hashMap">
+    SELECT COUNT(*)
+    FROM goods g
+    LEFT JOIN ticket t ON g.gds_no = t.gds_no
+    WHERE comm_code_grp_no = 'GD02'
+    <if test="artGroupNo != null and artGroupNo != ''">
+        AND g.art_group_no = #{artGroupNo}
+    </if>
+    <if test="artNo != null and artNo != ''">
+        AND g.art_no = #{artNo}
+    </if>
+    <if test="tkCtgr != null and tkCtgr != ''">
+        AND t.tk_ctgr = #{tkCtgr}
+    </if>
+    <if test="tkLctn != null and tkLctn != ''">
+        AND t.tk_lctn = #{tkLctn}
+    </if>
+    <if test="gdsNo != null and gdsNo != ''">
+        AND g.gds_no = #{gdsNo}
+    </if>
+    <if test="pic != null and pic != ''">
+        AND g.pic LIKE '%' || #{pic} || '%'
+    </if>
+    <if test="gdsDelYn != null and gdsDelYn != ''">
+        AND g.gds_del_yn = #{gdsDelYn}
+    </if>
+    <if test="gdsNm != null and gdsNm != ''">
+        AND g.gds_nm LIKE '%' || #{gdsNm} || '%'
+    </if>
+    <if test="startDate != null and startDate != ''">
+        AND TO_DATE(t.tk_start_ymd, 'YYYY-MM-DD') &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+    </if>
+    <if test="endDate != null and endDate != ''">
+        AND TO_DATE(t.tk_finish_ymd, 'YYYY-MM-DD') &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </if>
+</select>
+
+	<select id="ticketDetail" parameterType="int" resultMap="goodsMap">
+		SELECT t.tk_no
+				, t.tk_ctgr
+				, t.tk_lctn
+				, TO_CHAR(TO_DATE(t.tk_start_ymd), 'YYYY-MM-DD') AS TK_START_YMD
+		       ,TO_CHAR(TO_DATE(t.tk_finish_ymd), 'YYYY-MM-DD') AS TK_FINISH_YMD
+		       ,t.poster_file
+		       , t.tk_vprice
+		       , t.tk_rprice
+		       , t.tk_sprice
+		       , t.tk_runtime
+			   , t.tk_lctn_address
+		       , td.tk_detail_no
+		       , TO_CHAR(TO_DATE(td.tk_ymd), 'YYYY-MM-DD') AS tk_ymd
+		       , td.tk_round
+		       , g.gds_no
+		       , g.gds_type
+		       , g.gds_nm
+		       , g.unit_price
+		       , g.expln
+		       , g.pic
+		       , g.comm_code_grp_no
+		       , g.reg_dt
+		       , g.art_group_no
+		       , g.art_no
+		       , g.file_group_no
+		       , f.file_sn
+		       , f.file_group_no
+		       , f.file_original_name
+		       , f.file_save_name
+		       , f.file_save_locate
+		       , f.file_size
+		       , f.file_ext
+		       , f.file_mime
+		       , f.file_fancysize
+		       , f.file_save_date
+		       , f.file_downcount 
+		       ,(SELECT tf.file_save_locate
+		            FROM file_detail tf
+	 	           WHERE tf.file_group_no = t.poster_file) AS tk_file_save_locate
+	 	       ,(SELECT a.art_group_nm FROM artist_group a WHERE a.art_group_no = g.art_group_no) AS art_group_nm
+               ,(SELECT a.art_act_nm FROM artist a WHERE a.art_no = g.art_no) AS art_act_nm
+		FROM goods g
+	    LEFT JOIN ticket t ON g.gds_no = t.gds_no
+	    LEFT JOIN tk_detail td ON t.tk_no = td.tk_no
+	    LEFT JOIN file_group fg ON g.file_group_no = fg.file_group_no
+	    LEFT JOIN file_detail f ON f.file_group_no = fg.file_group_no
+	    WHERE g.gds_no = #{gdsNo}
+	</select>
+	
+	<update id="ticketUpdateGds" parameterType="com.ohot.shop.vo.GoodsVO" >
+		UPDATE GOODS
+		   SET GDS_NM = #{gdsNm}
+		   	   , UNIT_PRICE = #{ticketVO.tkVprice}
+		   	   , EXPLN = #{expln}
+		   	   , FILE_GROUP_NO = #{fileGroupNo}
+		WHERE  GDS_NO = #{gdsNo}
+	</update>
+	<update id="ticketUpdateTk" parameterType="com.ohot.shop.vo.TicketVO" >
+		UPDATE TICKET
+		   SET TK_CTGR = #{tkCtgr}
+		   	   , TK_LCTN = #{tkLctn}
+		   	   , POSTER_FILE = #{posterFile}
+		   	   , TK_VPRICE = #{tkVprice}
+		   	   , TK_RPRICE = #{tkRprice}
+		   	   , TK_SPRICE = #{tkSprice}
+		   	   , tk_runtime = #{tkRuntime}
+		   	   , tk_lctn_address =#{tkLctnAddress}
+		WHERE  TK_NO = ${tkNo}
+	</update>
+	<update id="ticketUpdateTkDe" parameterType="com.ohot.shop.vo.TkDetailVO" >
+		UPDATE TK_DETAIL
+		   SET TK_YMD = #{tkYmd}
+		   , TK_ROUND = #{tkRound}
+		   , GDS_NM = #{gdsNm}
+		 WHERE TK_DETAIL_NO= #{tkDetailNo}
+	</update>
+	
+	<update id="ticketDelete" parameterType="int">
+		UPDATE GOODS
+		SET GDS_DEL_YN ='Y'
+		WHERE GDS_NO =#{gdsNo}
+	</update>
+	
+	<!-- goodsNo 조회 -->
+	<select id="getMaxGdsNo" resultType="com.ohot.shop.vo.GoodsVO">
+	  SELECT MAX(GDS_NO) + 1 AS GDS_NO
+	    FROM GOODS
+	</select>
+	
+	<!-- Goods List 조회 -->
+	<select id="goodsListSearchPost" parameterType="hashMap" resultMap="artstGroupMapInfo">
+	 /* com.ohot.admin.mapper.AdminGoodsMapper.goodsListSearchPost */
+		SELECT *
+  		  FROM ( SELECT ROWNUM AS RRNUM
+     		  		  , COUNT(1) OVER() AS total_cnt
+     				  , TBL.*     
+  				   FROM ( SELECT A.ART_GROUP_NO
+							   , A.ART_GROUP_DEBUT_YMD
+							   , A.ART_GROUP_NM
+							   , A.ART_GROUP_NM_KO
+							   , A.ART_GROUP_EXPLN
+							   , A.ART_GROUP_REG_YMD
+							   , A.ART_GROUP_DEL_YN
+							   , A.LOGO_FILE_GROUP_NO
+							   , B.GDS_NO
+							   , B.GDS_TYPE
+							   , B.GDS_NM
+							   , B.UNIT_PRICE
+							   , B.EXPLN
+							   , B.PIC
+							   , B.REG_DT
+							   , B.COMM_CODE_GRP_NO
+							   , B.ART_NO
+							   , B.FILE_GROUP_NO
+							   , B.QTY
+							   , B.GDS_DEL_YN
+							FROM ARTIST_GROUP A RIGHT JOIN GOODS B ON(A.ART_GROUP_NO = B.ART_GROUP_NO)
+						   WHERE (B.COMM_CODE_GRP_NO != 'GD02' OR B.COMM_CODE_GRP_NO IS NULL)
+						   <if test="gdsNo != null and gdsNo != ''">
+					  		 AND GDS_NO = #{gdsNo}
+						   </if>
+						   <if test="gdsType != null and gdsType != ''">
+					  		 AND GDS_TYPE = #{gdsType}
+						   </if>
+						   <if test="gdsNm != null and gdsNm != ''">
+					  		 AND GDS_NM LIKE '%' ||  #{gdsNm} || '%'
+						   </if>
+						   <if test="pic != null and pic != ''">
+					  		 AND PIC LIKE '%' ||  #{pic} || '%'
+						   </if>
+						   <if test="gdsDelYn != null and gdsDelYn != ''">
+					  		 AND GDS_DEL_YN = #{gdsDelYn}
+						   </if>
+						   <if test="startDate != null and startDate != ''  and endDate != null and endDate != ''">
+						     AND TO_CHAR(REG_DT, 'YYYYMMDD') BETWEEN TO_CHAR(TO_DATE(#{startDate}), 'YYYYMMDD') 
+						     AND TO_CHAR(TO_DATE(#{endDate}), 'YYYYMMDD')
+					       </if>
+					       <if test="artGroupNo != null and artGroupNo != ''">
+					         AND A.ART_GROUP_NO = #{artGroupNo} 
+					       </if>
+					       
+					       <if test="unitPricePre != null and unitPricePre != ''  and unitPricePost != null and unitPricePost != ''">
+							 AND B.unit_price BETWEEN #{unitPricePre} AND #{unitPricePost}
+						   </if>
+					       ORDER BY GDS_NO DESC
+						) TBL					
+				) 
+		WHERE RRNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<!-- goodsDetail -->
+	<select id="goodsDetail" parameterType="int" resultMap="goodsMap">
+	  /* com.ohot.admin.mapper.AdminGoodsMapper.goodsDetail */
+		SELECT a.gds_no
+			 , a.gds_type
+			 , a.gds_nm
+			 , a.unit_price
+			 , a.expln
+			 , a.pic
+			 , a.reg_dt
+			 , a.comm_code_grp_no
+			 , a.art_group_no
+			 , a.art_no
+			 , a.file_group_no
+			 , a.qty
+			 , a.gds_del_yn
+		     , b.file_regdate
+		     , c.file_sn
+		     , c.file_group_no
+		     , c.file_original_name
+		     , c.file_save_name
+		     , c.file_save_locate
+		     , c.file_size
+		     , c.file_ext
+		     , c.file_mime
+		     , c.file_fancysize
+		     , c.file_save_date
+		     , c.file_downcount
+             , d.art_group_nm
+	  	  FROM GOODS A LEFT OUTER JOIN FILE_GROUP B ON(A.FILE_GROUP_NO = B.FILE_GROUP_NO)
+	                   LEFT OUTER JOIN FILE_DETAIL C ON(B.FILE_GROUP_NO = C.FILE_GROUP_NO)
+                       LEFT OUTER JOIN ARTIST_GROUP D ON(A.ART_GROUP_NO = D.ART_GROUP_NO)
+		  WHERE A.GDS_NO = #{gdsNo}
+		  ORDER BY c.file_sn DESC
+	</select>
+	
+	<update id="goodsUpdate" parameterType="com.ohot.shop.vo.GoodsVO">
+		UPDATE GOODS
+		   SET gds_type = #{gdsType}
+			 , gds_nm = #{gdsNm}
+			 , unit_price = #{unitPrice}
+			 , expln = #{expln}
+			 , comm_code_grp_no = #{commCodeGrpNo}
+			 , art_group_no = #{artGroupNo}
+			 , art_no = #{artNo}
+			 , gds_del_yn = 'N'
+		 WHERE gds_no = #{gdsNo}
+	</update>
+	
+	<!-- fileGroupNo를 조회하여 해당 fileGroupNo의 FILE_SN Max 값을 가져와 file_SN을 기존값+MAX값으로 변경 -->
+	<update id="fileSnUpdate" parameterType="long">
+		UPDATE FILE_DETAIL
+   		   SET FILE_SN = (	SELECT MAX(FILE_SN) 
+  							  FROM FILE_DETAIL 
+							 WHERE FILE_GROUP_NO = #{fileGroupNo}) + FILE_SN  
+	     WHERE FILE_GROUP_NO = #{fileGroupNo}
+	</update>
+	
+	<!-- File Detail Sn update -->
+	<!-- https://techbrad.tistory.com/62 -->
+	<update id="fileDetailSnUpdate" parameterType="com.ohot.vo.FileDetailVO">
+		/* com.ohot.admin.mapper.AdminGoodsMapper.fileGroupDetailSnUpdate */
+		
+		<foreach collection="fileDetailVOList" item="fileDetailVO" separator=";" index="index"  open="DECLARE BEGIN" close=";END;">
+        	UPDATE FILE_DETAIL
+               SET FILE_SN = #{fileDetailVO.fileSn}
+             WHERE FILE_GROUP_NO = #{fileDetailVO.fileGroupNo} 
+               AND FILE_SAVE_NAME = #{fileDetailVO.fileSaveName}
+        </foreach>
+	</update>
+	
+	<!-- ArtistGroupVO -->
+	<resultMap type="com.ohot.vo.ArtistGroupVO" id="artstGroupMapInfo">
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupDebutYmd" column="ART_GROUP_DEBUT_YMD"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupExpln" column="ART_GROUP_EXPLN"/>
+		<result property="artGroupRegYmd" column="ART_GROUP_REG_YMD"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="totalCnt" column="TOTAL_CNT"/>
+		<collection property="goodsVOList" resultMap="goodsMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.GoodsVO" id="goodsMap">
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="unitPrice" column="UNIT_PRICE"/>
+		<result property="expln" column="EXPLN"/>
+		<result property="pic" column="PIC"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="rrnum" column="RRNUM"/>
+		<result property="gdsDelYn" column="GDS_DEL_YN"/>
+	    <association property="fileGroupVO"  resultMap="fileGroupMap"/>
+	    <association property="ticketVO"  resultMap="ticketMap"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.TicketVO" id="ticketMap">
+		<result property="posterFile" column="POSTER_FILE"/>
+		<result property="totalSeatCnt" column="TOTAL_SEAT_CNT"/>
+		<result property="rsvtCnt" column="RSVT_CNT"/>
+		<result property="tkVprice" column="TK_VPRICE"/>
+		<result property="tkRprice" column="TK_RPRICE"/>
+		<result property="tkSprice" column="TK_SPRICE"/>
+		<result property="tkNo" column="TK_NO"/>
+		<result property="tkCtgr" column="TK_CTGR"/>
+		<result property="tkLctn" column="TK_LCTN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="tkStartYmd" column="TK_START_YMD"/>
+		<result property="tkFinishYmd" column="TK_FINISH_YMD"/>
+		<result property="tkRuntime" column="TK_RUNTIME"/>
+		<result property="tkLctnAddress" column="TK_LCTN_ADDRESS"/>
+		<result property="tkFileSaveLocate" column="TK_FILE_SAVE_LOCATE"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"/>
+		<collection property="tkDetailVOList" resultMap="tkDetailMap" />
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.TkDetailVO" id="tkDetailMap">
+		<result property="tkDetailNo" column="TK_DETAIL_NO"/>
+		<result property="tkYmd" column="TK_YMD"/>
+		<result property="tkRound" column="TK_ROUND"/>
+		<result property="tkNo" column="TK_NO"/>
+	</resultMap>
+	
+		<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+</mapper>

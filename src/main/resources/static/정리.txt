@@ -1,0 +1,531 @@
+1. 스프링 시큐리티에서 submit할 때
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+	1) <form 태그 사용시>
+			<sec:csrfInput />
+		</form>
+	2) ajax사용시 
+		beforeSend:function(xhr){
+					xhr.setRequestHeader("${_csrf.headerName}","${_csrf.token}");
+				},
+		success앞에 꼭쓰기
+	3) 파일 업로드 시 
+		"action", "/item/updatePost?${_csrf.parameterName}=${_csrf.token}"
+		"enctype" , "multupart/form-data"
+	
+	4) 만약 어쩔수없이csrf 비활성 처리가 필요하다면
+	   security-context.xml에서 <security:csrf disabled="true" /> 추가하기
+	
+2. 자동 로그인
+	1) 로그인하면 특정 시간 동안 다시 로그인 할 필요가 없는 기능
+	2) 스프링 시큐리티는 데이터베이스를 사용하여 처리  persistent_logins 테이블이용
+	3) security-context.xml 에서 remember-me 태그를 이용하여 구현
+
+3. 스프링 시큐리티 표현식
+	1) hasRole("ROLE_MEMBER") : 해당 롤이 있으면 true
+	2) hasAnyRole ("ROLE_MEMBER", "ROLE_ADMIN") : 여러 롤들 중에서 하나라도 해당하는 롤이 있으면 true
+	3) principal : 인증된 사용자의 사용자 정보(UserDetails 인터페이스를 구현한 클래스의 객체)
+	4) authentication : 인증된 사용자의 인증 정보 (Authentication 인터페이스를 구현한 클래스의 객체)
+	5) permitAll : 모든 사용자에게 허용
+	6) denyAll : 모든 사용자에게 거부
+	7) isAnonymous() : 익명의 사용자의 경우 (로그인을 하지 않은 경우도 해당)
+	8) isAuthenticated() : 인증된 사용자의 경우 true
+	9) isFullyAuthenticated() : Remember-me로 인증된 것이 아닌 일반적인 방법으로 인증된 사용자인 경우 true
+	
+	
+4. CKEditor 사용방법
+<script>
+	CKEDITOR.replace('editor');
+	//html 태그 사라지는 오류 해결
+	CKEDITOR.config.allowedContent = true;
+	//내용 미리 넣기
+	CKEDITOR.instances.editor.setData('<p>aaa</p>'); 
+	//ckeditor 안에 있는 내용을 태그 포함해서 다 가져오기
+	CKEDITOR.instances.editor.getData();
+	//입력란 읽기전용
+	$("#editor").attr("readOnly",true);
+	//입력란 활성화
+	CKEDITOR.instances['editor'].setReadOnly(false);
+</script>
+	
+	
+5. SBAdmin2 입력창 이미지 처리
+<style>
+.bg-register-image2 {
+  background-position: center;
+  background-size: cover;
+}
+</style>
+
+$("#row .bg-register-image2").css({"background-image":"url("+e.target.result+")"});
+
+<div class="col-lg-5 d-none d-lg-block bg-register-image2" 
+      style="background-image:url('https://source.unsplash.com/Mv9hjnEUHR4/600x800');">
+   </div>
+	
+	
+reader.onload = function(e){
+				//background-position:center;background-size:cover
+				$(".bg-register-image").css({"background-image":"url("+e.target.result+")","background-position":"center","background-size":"cover"});
+// 				console.log(e.target.result);
+			}
+	
+6. formData를 통해서 비동기 통신
+//아작났어유..피씨다타써
+$.ajax({
+	url:"",
+	processData:false,
+	contentType:false,
+	data:formData,
+	type:"post",
+	dataType:"json",
+	success:function(result){
+		console.log("result : ", result);
+	}
+});
+7. json을 통해서 비동기(Asynchronous) 통신
+//아작났어유..피씨다타써
+$.ajax({
+	url:"",
+	contentType:"application/json;charset=utf-8",
+	data:JSON.stringify(data),
+	type:"post",
+	dataType:"json",
+	success:function(result){
+		console.log("result : ", result);
+	}
+});
+
+7_2. 그냥 보내기
+//프로젝트 별지 상세보기
+	$(".clsJb202008").on("click",function(){
+		let seq = $(this).data("seq");
+		
+		console.log("seq : " + seq);
+		
+		$.ajax({
+			url:"/intranet/jeungBing/projSeptSelectOne",
+			data:{"seq":seq},
+			type:"post",
+			dataType:"json",
+			beforeSend:function(xhr){
+				xhr.setRequestHeader("${_csrf.headerName}","${_csrf.token}");
+			},
+			success:function(result){
+				console.log("result : ", result);
+			}
+		});
+	});	
+	
+8. checkbox, select 요소 값 가져오기
+//체크박스에 체크된 값 가져오기
+let ePosition = $("input[name='ePosition']:checked").val();
+//select 박스의 값 가져오기
+//let eDept = $("select[name='eDept']").val();
+let eDept = $("#eDept option:selected").val();
+	
+9.구글 카멜변환
+/
+create or replace FUNCTION FN_GETCAMEL(COLUMN_NAME IN VARCHAR2)
+RETURN VARCHAR2
+IS
+RSLT VARCHAR2(30);
+BEGIN
+--카멜표기로 변환(SITE_NUM -> siteNum)
+SELECT LOWER(SUBSTR(REPLACE(INITCAP(COLUMN_NAME),'_'),1,1))
+|| SUBSTR(REPLACE(INITCAP(COLUMN_NAME),'_'),2) INTO RSLT
+FROM DUAL;
+--리턴
+RETURN RSLT;
+END;
+/
+
+--구글 카멜변환(https://heavenly-appear.tistory.com/270)
+SELECT COLUMN_NAME
+, DATA_TYPE
+, CASE WHEN DATA_TYPE='NUMBER' THEN 'private int ' || FN_GETCAMEL(COLUMN_NAME) || ';'
+WHEN DATA_TYPE IN('VARCHAR2','CHAR') THEN 'private String ' || FN_GETCAMEL(COLUMN_NAME) || ';'
+WHEN DATA_TYPE='DATE' THEN 'private Date ' || FN_GETCAMEL(COLUMN_NAME) || ';'
+ELSE 'private String ' || FN_GETCAMEL(COLUMN_NAME) || ';'
+END AS CAMEL_CASE
+, '<result property="'||FN_GETCAMEL(COLUMN_NAME)||'" column="'||COLUMN_NAME||'"/>' RESULTMAP
+FROM ALL_TAB_COLUMNS
+WHERE TABLE_NAME = 'WRITER'
+AND    OWNER = 'JSPEXAM';
+/
+	
+--MYBATIS INSERT문 만들기
+SELECT LISTAGG('#{'||FN_GETCAMEL(COLUMN_NAME)||'}',',') WITHIN GROUP(ORDER BY COLUMN_NAME)
+FROM ALL_TAB_COLUMNS
+WHERE TABLE_NAME = 'MEMBER'
+AND    OWNER = 'JSPEXAM';
+	
+10. 모달 정리
+<!-- 모달을 띄우는 방법
+1. button으로 띄우기
+<button type="button" class="btn btn-default" 
+data-toggle="modal" data-target="#modal-default">
+Launch Default Modal
+</button>
+
+2. a 태그로 띄우기
+<a data-toggle="modal" href="#modal-default">Open Modal</a>
+
+3. 기타 요소로 띄우기
+<p data-toggle="modal" data-target="#modal-default">Open Modal</p>
+ -->
+<!-- bookVO -> attachVOList 멤버변수 -> List<AttachVO> 
+JSTL누적 : 
+
+c set var="auth" value=""
+
+c set var="auth" value="달러{auth += ' ' += 누적할값}
+-->
+
+$('#id').modal('show');
+$('#id').modal('hide');
+
+11. 양쪽정렬
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+	<div class="container">
+		<div class="navbar-header" style="justify-content:left;display:flex;">
+			<a class="navbar-brand" href="/home">Home</a>
+		</div>
+		<button type="submit" class="btn btn-primary"
+		style="justify-content:right;display:flex;">로그아웃</button>
+	</div>
+</nav>
+	
+	
+12. sweetalert2 => success, error, warning, info, question
+1.
+ 1) adminlte 
+  <script src="/resources/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="/resources/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+  또는.. 2) sweetalert2.min.js 및 sweetalert2.min.css 다운로드
+
+
+2. <body class="sidebar-mini sidebar-closed sidebar-collapse">
+
+3. <html class>
+
+4. 
+var Toast = Swal.mixin({
+	      toast: true,
+	      position: 'top-end',
+	      showConfirmButton: false,
+	      timer: 3000
+	    });
+	
+	Toast.fire({
+		icon:'success',
+		title:'개똥이'
+	});
+
+	
+13. ionIcons 사용
+1) URL
+https://ionic.io/ionicons
+
+2) js등록
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+3) 사용
+<use xlink:href="#clipboard-outline"></use>에서 clipboard를 추출 후 사용
+
+<ion-icon name="clipboard"></ion-icon>
+<ion-icon name="close"></ion-icon>
+
+14. JQuery 를 이용한 테이블 컬럼값 변경 하기
+1) 
+		$("#id table tr:eq(0) td:eq(0)").html("000");
+		$("#id table tr:eq(1) td:eq(1)").html("111");
+		$("#id table td:eq(2)").html("222");
+		
+		//코드명, 설명 변경하는 방법
+		let trArr = $("#detTbody").children("tr");
+		
+		for(let i=0;i<trArr.length;i++){
+			//tr을 반복하면서 코드값을 str1변수에 저장
+			let str1 = $("#detTbody tr:eq("+i+") td:eq(1)").html();
+			console.log("i : " + i + ", str1 : " + str1);
+			//str1변수와 클릭 시 가져온 코드값이 같으면 코드명, 설명을 변경함
+			if(str1==comDetCode){
+				$("#detTbody tr:eq("+i+") td:eq(2)").html(comDetCodeNm);
+				$("#detTbody tr:eq("+i+") td:eq(3)").children("span").eq(0).html(descriptions);
+			}//end if
+		}//end for
+		//모달창을 닫음
+		$("#defaultModal").modal("hide");
+
+2) 
+	let trArr = $("#detTbody tr");
+     console.log("trArr : ",trArr);
+     
+     $.each(trArr,function(i,tr){
+        console.log(i,"=",tr);
+        let str1 = $(tr).children("td:eq(1)").text();
+        
+        if(comDetCode==str1){
+           $(tr).remove();
+        }
+     });
+
+     
+15. ckeditor5 사용하기
+		1. sample.css, ckeditor.js 임포트
+		<link type="text/css" href="/resources/ckeditor5/sample/css/sample.css" rel="stylesheet" media="screen" />
+		<script type="text/javascript" src="/resources/ckeditor5/ckeditor.js"></script>
+		
+		2. div 준비
+		<div id="hpropOpinion">
+		</div>
+		
+		3. script 추가(스프링 시큐리티 토큰 처리 가능)
+		<script type="text/javascript">
+		ClassicEditor.create( document.querySelector('#hpropOpinion'),{ckfinder:{uploadUrl:'/image/upload?${_csrf.parameterName}=${_csrf.token}'}})
+		 .then(editor=>{window.editor=editor;})
+		 .catch(err=>{console.error(err.stack);});
+		</script>
+		----------------------------------------------
+		에디터->textarea
+		
+		3-2. 생성되자마자 값을 넣어야할 때
+		ClassicEditor.create(document.querySelector('#prodDetailTemp'),{ckfinder:{uploadUrl:'/image/upload'}})
+		 .then(editor=>{window.editor=editor;window.editor.setData('${prodVO.prodDetail}');})
+		 .catch(err=>{console.error(err.stack);});
+		
+		$(".ck-blurred").keydown(function(){
+			console.log("str : " + window.editor.getData());
+			
+			$("#studDet").val(window.editor.getData());
+		});
+		
+		$(".ck-blurred").on("focusout",function(){
+			$("#studDet").val(window.editor.getData());
+		});
+		------------------------------------------------
+		3-3. CKEditor를 없앰
+		/*
+		이전 요소("#선택요소").prev()
+		선택 요소("#선택요소")
+		다음 요소("#선택요소").next()
+		*/
+		$("#prodDetailTemp").next().remove();
+		------------------------------------------------
+		3-4. 
+		//달러(".ck-blurred").keydown(function())
+		//동적으로 생성된 객체의 이벤트 처리 시
+		$(document).keydown(".ck-blurred",function(){
+			//window.editor : CKEditor 객체
+			console.log("str : " + window.editor.getData());
+		
+			$("#prodDetail").val(window.editor.getData());
+		});
+		
+		//CKEditor로부터 커서이동 또는 마우스 이동 시 실행
+		//달러(".ck-blurred").focusout(function())
+		//동적으로 생성된 객체의 이벤트 처리 시
+		$(document).focusout(".ck-blurred",function(){
+			$("#prodDetail").val(window.editor.getData());
+		});
+		-----------------------------------------------
+		
+		4. FileController 에 요청처리 메소드 추가
+		@ResponseBody
+		@PostMapping(value = "/image/upload")
+		public Map<String,Object> image(MultipartHttpServletRequest request) throws Exception {
+		    
+		// ckeditor는 이미지 업로드 후 이미지 표시하기 위해 uploaded 와 url을 json 형식으로 받아야 함
+		// modelandview를 사용하여 json 형식으로 보내기위해 모델앤뷰 생성자 매개변수로 jsonView 라고 써줌
+		// jsonView 라고 쓴다고 무조건 json 형식으로 가는건 아니고 @Configuration 어노테이션을 단 
+		// WebConfig 파일에 MappingJackson2JsonView 객체를 리턴하는 jsonView 매서드를 만들어서 bean으로 등록해야 함 
+		ModelAndView mav = new ModelAndView("jsonView");
+		
+		// ckeditor 에서 파일을 보낼 때 upload : [파일] 형식으로 해서 넘어오기 때문에 upload라는 키의 밸류를 받아서 uploadFile에 저장함
+		MultipartFile uploadFile = request.getFile("upload");
+		log.info("uploadFile : " + uploadFile);
+		
+		// 파일의 오리지널 네임
+		String originalFileName = uploadFile.getOriginalFilename();
+		log.info("originalFileName : " + originalFileName);
+		
+		        // 파일의 확장자
+		String ext = originalFileName.substring(originalFileName.indexOf("."));
+		log.info("ext : " + ext);
+		
+		        // 서버에 저장될 때 중복된 파일 이름인 경우를 방지하기 위해 UUID에 확장자를 붙여 새로운 파일 이름을 생성
+		String newFileName = UUID.randomUUID() + ext;
+		
+		// 이미지를 현재 경로와 연관된 파일에 저장하기 위해 현재 경로를 알아냄
+		// String realPath = request.getServletContext().getRealPath("/");
+		String url = request.getRequestURL().toString();
+		url = url.substring(0, url.indexOf("/", 7));
+		log.info("url : " + url);
+		
+		// 현재경로/upload/파일명이 저장 경로
+		String savePath = "C:\\eGovFrameDev-3.10.0-64bit\\workspace\\testingProj\\src\\main\\webapp\\resources\\upload\\" + newFileName;
+		log.info("savePath : " + savePath);
+		
+		// 브라우저에서 이미지 불러올 때 절대 경로로 불러오면 보안의 위험 있어 상대경로를 쓰거나 이미지 불러오는 jsp 또는 클래스 파일을 만들어 가져오는 식으로 우회해야 함
+		// 때문에 savePath와 별개로 상대 경로인 uploadPath 만들어줌
+		String uploadPath = "/resources/upload/" + newFileName; 
+		
+		// 저장 경로로 파일 객체 생성
+		File file = new File(savePath);
+		
+		// 파일 업로드
+		uploadFile.transferTo(file);
+		
+		// uploaded, url 값을 modelandview를 통해 보냄
+		// mav.addObject("uploaded", true); // 업로드 완료
+		// mav.addObject("url", uploadPath); // 업로드 파일의 경로
+		
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("uploaded", true);
+		map.put("url", url+uploadPath);
+		//map : {uploaded=true, url=/resources/upload/b8baefc3-34c0-44c8-af3b-4a9464a61e7c.jpg}
+		log.info("map : " + map);
+		
+		return map;
+		}
+		
+		5. URL 처리 방법
+		http://localhost:8090/admin/view/main.do
+		
+		request.getScheme()  :  http 또는 https를 반환
+		request.getServerName()  :  localhost를 반환
+		request.getServerPort() : 8090을 반환
+		
+		조합 : 
+		request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
+		request.getRequestURL() : 전체 주소 정보 http://localhost:8090/admin/view/main.do를 반환
+		request.getRequestURI()  : contextPath 이후 /admin/view/main.do를 반환
+		request.getRequestURL().toString().replace(request.getRequestURI(),"");
+		
+		6. div 하위 요소 정렬
+		대표 속성
+		center : 중앙 정렬
+		space-between : 사이드 정렬
+		space-around : 두 엘리먼트에 일정한 (간격은 같다) 간격을 준 정렬
+		justify-content 의 주요 속성 3가지 입니다.
+		
+		7. 활용팁
+		CKEditor5에서 입력하는 값을 읽거나 값을 셋팅하기 위해서는 에디터 사용시 명시하는 script를 살펴보자 아래 명시한 스크립트에서
+		window.editor = editor; 
+		 라는 표현이 있는데 editor 를 window.editor에 대입하고 있다.
+		 따라서 값을 읽을 때는 window.editor.getData ()를 사용하고 값을 셋팅할 때는 window.editor.setData ()를 사용하면 됨
+		
+		$(".ck-blurred").keydown(function(){
+			console.log("str : " + window.editor.getData());
+			
+			$("#ciMesg").val(window.editor.getData());
+		});
+		
+		$(".ck-blurred").on("focusout",function(){
+			$("#ciMesg").val(window.editor.getData());
+		});
+		
+		아래는 ckeditor5에 readonly를 적용하는 JavaScript 코드이다.
+
+// readonly 동작 O
+ClassicEditor
+    .create(document.querySelector('#item_detail_textarea'))
+    .then(editor => {
+        console.log(editor);
+        editor.enableReadOnlyMode("item_detail_textarea");
+    })
+    .then(editor=>{window.editor=editor;})
+    .catch(error => {
+        console.error(error);
+    });
+
+// readonly 동작 X
+ClassicEditor
+    .create(document.querySelector('#item_detail_textarea'))
+    .then(editor => {
+        console.log(editor);
+        editor.isReadOnly = true;
+    })
+    .then(editor=>{window.editor=editor;})
+    .catch(error => {
+        console.error(error);
+    });
+		
+		
+16. 오라클 Date 자료형의 날짜를 자바 String 타입으로 변환
+SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+bookVO.setInsertDateStr(formatter.format(bookVO.getInsertDate()));
+
+17. 스프링부트 application.properties 설정
+spring.application.name=BookProj
+
+logging.level.kr.or.ddit=debug
+
+#포트변경
+server.port=8050
+
+# view resolver 접두어, 접미사 설정
+spring.mvc.view.prefix=/WEB-INF/views/
+spring.mvc.view.suffix=.jsp
+
+#DB설정
+spring.datasource.url=jdbc:oracle:thin:@localhost:8521/FREEPDB1
+spring.datasource.username=jspexam
+spring.datasource.password=java
+
+#camel case 처리(MEM_ID컬럼을 memId)
+mybatis.configuration.map-underscore-to-camel-case=true
+mybatis.configuration.jdbc-type-for-null=varchar
+mybatis.type-aliases-package=kr.or.ddit.vo
+mybatis.mapper-locations=classpath:mybatis/mapper/*-Mapper.xml
+
+18. [SQLD] ORA-01950: 테이블스페이스 'USERS'에 대한 권한이 없습니다
+ALTER USER JSPEXAM DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
+
+19. javascript NVL함수 만들기 
+/**
+ * NVL: expr1 값이 null(undefined) 또는 공백인 경우 expr2 값을 반환, 그렇지 않으면 expr1 값 반환
+ * @return expr1
+ */
+function nvl(expr1, expr2) {
+	if (expr1 === undefined || expr1 == null || expr1 == "") {
+		expr1 = expr2;
+	}
+	return expr1;
+}
+
+20. ==와 === 차이
+==는 Equal Operator이고,  ===는 Strict Equal Operator이다. 
+==는 a == b 라고 할때, a와 b의 값이 같은지를 비교해서, 같으면 true, 
+	다르면 false라고 한다.(값만 같으면 true이다.)
+===는 Strict, 즉 엄격한 Equal Operator로써, "엄격하게" 같음을 비교할 때 사용하는 연산자이다. 
+===는 a === b 라고 할때, 값과 값의 종류(Data Type)가 모두 같은지를 비교해서, 
+	같으면 true, 다르면 false라고 한다. 
+	
+21. 체크박스 선택 개수 구하기 
+1. 전체 갯수
+$('input:checkbox[name=name명]').length;
+
+2. 선택된 갯수
+$('input:checkbox[name=name명]:checked').length;
+
+3. 전체 체크 박스 순회
+$('input:checkbox[name=name명]').each(function (){
+});
+
+4. 선택된 체크 박스 순회
+$('input:checkbox[name=name명]:checked').each(function (){
+});
+
+
+22. JSTL로 오늘 날짜 가져오기
+<!-- 현재년도 -->
+<c:set var="now" value="<%=new java.util.Date()%>" />
+<c:set var="sysYear"><fmt:formatDate value="${now}" pattern="yyyy" /></c:set> 
+
+<!-- 화면에 뿌릴때 -->
+<c:out value="${sysYear}" />
+
+* 그냥 아래처럼 뿌려도 됨. 패턴(pattern)을 원하는 형식으로 지정해서 사용하세요.
+<fmt:formatDate value="${now}" pattern="yyyy-MM-dd hh:mm:ss" />

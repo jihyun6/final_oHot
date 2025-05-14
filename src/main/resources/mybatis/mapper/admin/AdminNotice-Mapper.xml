@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.admin.mapper.AdminNoticeMapper">
+
+	<resultMap type="com.ohot.home.community.vo.ArtistGroupNoticeVO" id="PostMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="parentPostNo" column="PARENT_POST_NO"/>
+		<result property="bbsPostNo" column="BBS_POST_NO"/>
+		<result property="bbsTypeCdNo" column="BBS_TYPE_CD_NO"/>
+		<result property="bbsTitle" column="BBS_TITLE"/>
+		<result property="bbsCn" column="BBS_CN"/>
+		<result property="bbsRegDt" column="BBS_REG_DT"/>
+		<result property="bbsChgDt" column="BBS_CHG_DT"/>
+		<result property="bbsDelYn" column="BBS_DEL_YN"/>
+		<result property="bbsInqCnt" column="BBS_INQ_CNT"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="bbsRegDate" column="BBS_REG_DATE"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+
+<select id="artGroupNoticeList" parameterType="hashMap" resultType="com.ohot.home.community.vo.ArtistGroupNoticeVO">
+
+SELECT * FROM
+(
+    SELECT
+        ROWNUM AS RNUM
+        ,COUNT(1) OVER() AS total_cnt
+        ,A.*
+    FROM(
+    
+        SELECT G.BBS_POST_NO, G.BBS_TYPE_CD_NO, G.BBS_TITLE, G.BBS_CN
+        
+        , TO_CHAR(G.BBS_REG_DT,'YYYY-MM-DD') AS BBS_REG_DATE
+        , TO_CHAR(G.BBS_REG_DT,'YYYY-MM-DD') AS BBS_REG_DT2
+        
+        , G.BBS_CHG_DT, G.BBS_DEL_YN, G.BBS_INQ_CNT, G.ART_GROUP_NO, G.FILE_GROUP_NO, G.PARENT_POST_NO
+        FROM BOARD_POST G
+        WHERE 1=1
+        AND G.ART_GROUP_NO>0
+        <if test="categoryArtGroupNo != null and categoryArtGroupNo != ''">
+          AND g.ART_GROUP_NO = #{categoryArtGroupNo}
+        </if>
+        <if test="bbsDelYn != null and bbsDelYn != ''">
+          AND g.BBS_DEL_YN = #{bbsDelYn}
+        </if>
+	    <if test="bbsRegDate != null and bbsRegDate != ''">
+		  AND TRUNC(G.BBS_REG_DT) = #{bbsRegDate}
+	    </if>
+	    <if test="bbsTitle != null and bbsTitle != ''">
+	      AND G.BBS_TITLE LIKE '%' || #{bbsTitle} || '%'
+	    </if>
+        ORDER BY g.BBS_POST_NO DESC) A
+        )
+        WHERE RNUM &gt;= #{startRow} AND RNUM &lt;= #{endRow}        
+</select>
+
+<select id="getTotal" parameterType="hashMap" resultType="int">
+        SELECT COUNT(*)
+        FROM BOARD_POST
+        WHERE ART_GROUP_NO > 0
+        <if test="categoryArtGroupNo != null and categoryArtGroupNo != ''">
+          AND ART_GROUP_NO = #{categoryArtGroupNo}
+        </if>
+        <if test="bbsDelYn != null and bbsDelYn != ''">
+          AND BBS_DEL_YN = #{bbsDelYn}
+        </if>
+	    <if test="bbsRegDate != null and bbsRegDate != ''">
+		  AND TRUNC(BBS_REG_DT) = #{bbsRegDate}
+	    </if>
+	    <if test="bbsTitle != null and bbsTitle != ''">
+	      AND BBS_TITLE LIKE '%' || #{bbsTitle} || '%'
+	    </if>
+</select>
+
+<select id="artGroupList" resultType="com.ohot.vo.ArtistGroupVO">
+	SELECT ART_GROUP_NO,ART_GROUP_NM
+	FROM ARTIST_GROUP
+	WHERE ART_GROUP_NO>0
+</select>
+
+<select id="getArtNm" parameterType="int" resultType="String">
+	SELECT ART_GROUP_NM
+	FROM ARTIST_GROUP
+	WHERE ART_GROUP_NO = #{artGroupNo}
+</select>
+
+<select id="detailNotice" parameterType="int" resultMap="PostMap" >
+	SELECT
+	    a.bbs_post_no,
+	    a.bbs_type_cd_no,
+	    a.bbs_title,
+	    a.bbs_cn,
+	    TO_CHAR(a.bbs_reg_dt,'YYYY-MM-DD HH24:MI:SS') AS BBS_REG_DATE,
+	    a.bbs_chg_dt,
+	    a.bbs_del_yn,
+	    a.bbs_inq_cnt,
+	    a.art_group_no,
+	    a.file_group_no,
+	    a.parent_post_no,
+	    c.file_sn,
+	    c.file_original_name,
+	    c.file_save_name,
+	    c.file_save_locate,
+	    c.file_size,
+	    c.file_ext,
+	    c.file_mime,
+	    c.file_fancysize,
+	    c.file_save_date,
+	    c.file_downcount
+	FROM
+	    board_post  a
+	    LEFT JOIN file_group  b ON ( a.file_group_no = b.file_group_no )
+	    LEFT JOIN file_detail c ON ( b.file_group_no = c.file_group_no )
+	WHERE
+	    bbs_post_no = #{bbsPostNo}
+</select>
+
+<update id="editNotice" parameterType="com.ohot.home.community.vo.ArtistGroupNoticeVO">
+		UPDATE board_post
+		SET 
+			<if test="bbsTitle != null and bbsTitle != ''">
+			BBS_TITLE = #{bbsTitle},
+		    </if>
+		    <if test="bbsCn != null and bbsCn != ''">
+		   BBS_CN = #{bbsCn},
+		   </if>
+		   <if test="fileGroupNo != null and fileGroupNo != ''">
+		   FILE_GROUP_NO = #{fileGroupNo},
+		   </if>
+		   BBS_CHG_DT = SYSDATE
+		WHERE bbs_post_no = #{bbsPostNo}
+</update>
+
+<update id="deleteNotice" parameterType="int">
+	UPDATE BOARD_POST
+	SET BBS_DEL_YN = 'Y'
+	WHERE BBS_POST_NO = #{bbsPostNo}
+</update>
+
+<update id="unDeleteNotice" parameterType="int">
+	UPDATE BOARD_POST
+	SET BBS_DEL_YN = 'N'
+	WHERE BBS_POST_NO = #{bbsPostNo}
+</update>
+
+<select id="getNo" resultType="int">
+SELECT MAX(BBS_POST_NO)
+FROM BOARD_POST
+WHERE ART_GROUP_NO > 0
+</select>
+
+
+<insert id="addNotice" parameterType="com.ohot.home.community.vo.ArtistGroupNoticeVO">
+	<selectKey resultType="int" order="BEFORE" keyProperty="bbsPostNo">
+		SELECT NVL(MAX(BBS_POST_NO),0)+1
+			FROM BOARD_POST
+	</selectKey>
+	INSERT
+    INTO board_post (
+        bbs_post_no,
+        bbs_type_cd_no,
+        bbs_title,
+        bbs_cn,
+        bbs_reg_dt,
+        bbs_del_yn,
+        art_group_no,
+        file_group_no,
+        parent_post_no
+    )
+VALUES (#{bbsPostNo},1,#{bbsTitle},#{bbsCn},SYSDATE,'N',#{artGroupNo},#{fileGroupNo},null )
+</insert>
+</mapper>

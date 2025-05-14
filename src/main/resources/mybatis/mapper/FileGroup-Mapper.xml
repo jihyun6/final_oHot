@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 매퍼interface의 풀경로명을 매퍼XML의 namespace속성의 값으로 쓰면 둘이 연결됨 -->
+<mapper namespace="com.ohot.mapper.FileGroupMapper">
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+      <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+      <result property="fileRegdate" column="FILE_REGDATE"/>
+      <collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+   </resultMap>
+   
+   <resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+      <result property="fileSn" column="FILE_SN"/>
+      <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+      <result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+      <result property="fileSaveName" column="FILE_SAVE_NAME"/>
+      <result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+      <result property="fileSize" column="FILE_SIZE"/>
+      <result property="fileExt" column="FILE_EXT"/>
+      <result property="fileMime" column="FILE_MIME"/>
+      <result property="fileFancysize" column="FILE_FANCYSIZE"/>
+      <result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+      <result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+   </resultMap>
+   
+    <!-- FILE_GROUP 테이블에 insert(1회 실행)
+   //실행전 fileGroupVO{fileGroupNo=0,fileRegdate=null)
+   //실행후 fileGroupVO{fileGroupNo=20250226004,fileRegdate=null) 왜냐하면 selectKey에 의해서..
+   public int insertFileGroup(FileGroupVO fileGroupVO) -->
+   <insert id="insertFileGroup" parameterType="com.ohot.vo.FileGroupVO">
+      <selectKey resultType="long" order="BEFORE" keyProperty="fileGroupNo">
+         SELECT NVL(SUBSTR(MAX(FILE_GROUP_NO),1,8)
+              || TRIM(TO_CHAR(SUBSTR(MAX(FILE_GROUP_NO),-3,3)+1,'000')),
+                 TO_CHAR(SYSDATE,'YYYYMMDD"001"')) AS RSLT
+         FROM   FILE_GROUP
+         WHERE  SUBSTR(FILE_GROUP_NO,1,8) = TO_CHAR(SYSDATE,'YYYYMMDD')
+      </selectKey>
+      
+      INSERT INTO FILE_GROUP(FILE_GROUP_NO, FILE_REGDATE)
+      VALUES(#{fileGroupNo},SYSDATE)
+   </insert>
+   
+   <!-- FILE_DETAIL 테이블에 insert 
+   FILE_DETAIL 테이블에 insert
+   public int insertFileDetail(FileDetailVO fileDetailVO)-->
+   <insert id="insertFileDetail" parameterType="com.ohot.vo.FileDetailVO">
+      <selectKey resultType="long" order="BEFORE" keyProperty="fileSn">
+         SELECT NVL(MAX(FILE_SN),0)+1 FROM FILE_DETAIL
+         WHERE  FILE_GROUP_NO = #{fileGroupNo}
+      </selectKey>
+   
+      INSERT INTO FILE_DETAIL(FILE_SN, FILE_GROUP_NO, FILE_ORIGINAL_NAME, FILE_SAVE_NAME, FILE_SAVE_LOCATE
+            , FILE_SIZE, FILE_EXT, FILE_MIME, FILE_FANCYSIZE, FILE_SAVE_DATE
+            , FILE_DOWNCOUNT)
+      VALUES(#{fileSn},#{fileGroupNo},#{fileOriginalName},#{fileSaveName},#{fileSaveLocate}
+           ,#{fileSize},#{fileExt},#{fileMime},#{fileFancysize},SYSDATE
+           ,#{fileDowncount})
+   </insert>
+   
+   <!-- 파일정보 가져오기
+   public FileDetailVO selectFileDetail(FileDetailVO fileDetailVO)
+   
+   {fileSn:2,fileGroupNo:20250226036,..}
+   -->
+   <select id="selectFileDetail" parameterType="com.ohot.vo.FileDetailVO" >
+      SELECT FILE_SN, FILE_GROUP_NO, FILE_ORIGINAL_NAME, FILE_SAVE_NAME, FILE_SAVE_LOCATE
+           , FILE_SIZE, FILE_EXT, FILE_MIME, FILE_FANCYSIZE, FILE_SAVE_DATE
+           , FILE_DOWNCOUNT 
+      FROM   FILE_DETAIL
+      WHERE  FILE_SN = #{fileSn}
+      AND    FILE_GROUP_NO = #{fileGroupNo}
+   </select>
+   
+   <!-- 이미지들 삭제
+    FileDetailVO(fileSn=1, fileGroupNo=20250226070, fileOriginalName=null, fileSaveName=null
+   , fileSaveLocate=null, fileSize=0, fileExt=null, fileMime=null, fileFancysize=null
+   , fileSaveDate=null, fileDowncount=0)
+   public int deleteFileDetail(FileDetailVO fileDetailVO); -->
+   <delete id="deleteFileDetail" parameterType="com.ohot.vo.FileDetailVO">
+      DELETE FROM FILE_DETAIL
+      WHERE  FILE_SN = #{fileSn} AND FILE_GROUP_NO = #{fileGroupNo}
+   </delete>
+  
+</mapper>

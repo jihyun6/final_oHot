@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.shop.mapper.CartMapper">
+  
+	<insert id="cartInsert" parameterType="com.ohot.shop.vo.CartVO">
+		/* com.ohot.shop.mapper.CartMapper.cartInsert  */
+		INSERT INTO cart (
+		       cart_no
+		     , gds_no
+		     , mem_no
+		     , qty
+		     , amount
+		     , prod_option
+		) VALUES (
+		     #{cartNo},
+		     #{gdsNo},
+		     #{memNo},
+		     #{qty},
+		     #{amount},
+		     #{prodOption}
+		)
+	</insert>
+	
+	
+	<resultMap type="com.ohot.shop.vo.CartVO" id="cartMapInfo">
+	  <result property="cartNo" column="CART_NO"/>
+	  <result property="gdsNo" column="GDS_NO"/>
+	  <result property="memNo" column="MEM_NO"/>
+	  <result property="qty" column="QTY"/>
+	  <result property="amount" column="AMOUNT"/>
+	  <result property="prodOption" column="PROD_OPTION"/>
+	  
+	  <association property="goodsVO" resultMap="goodsMap"></association>
+	</resultMap>
+	
+	<!-- CART : GOODS = 1 : 1 -->
+	<resultMap type="com.ohot.shop.vo.GoodsVO" id="goodsMap">
+		<result property="qty" column="QTY"/>
+		<result property="gdsDelYn" column="GDS_DEL_YN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="unitPrice" column="UNIT_PRICE"/>
+		<result property="expln" column="EXPLN"/>
+		<result property="pic" column="PIC"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<!-- artistGroupVO : FILE_GROUP = 1 : 1 -->
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<!-- FILE_GROUP : FILE_DETAIL = 1 : N -->
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<select id="cartList" parameterType="com.ohot.vo.UsersVO" resultMap="cartMapInfo">
+		/* com.ohot.shop.mapper.CartMapper.cartList */
+		select a.cart_no
+			 , a.gds_no
+			 , a.mem_no
+			 , a.qty
+			 , a.amount
+			 , a.prod_option
+             , b.gds_no
+		     , b.gds_type
+		     , b.gds_nm
+		     , b.unit_price
+		     , b.expln
+		     , b.pic
+		     , b.reg_dt
+		     , b.comm_code_grp_no
+		     , b.art_no
+		     , b.qty
+		     , b.gds_del_yn
+		     , c.file_regdate
+		     , d.file_sn
+		     , d.file_original_name
+		     , d.file_save_name
+		     , d.file_save_locate
+		     , d.file_size
+		     , d.file_ext
+		     , d.file_mime
+		     , d.file_fancysize
+		     , d.file_save_date
+		     , d.file_downcount
+  		  FROM CART A INNER JOIN GOODS B ON(A.GDS_NO = B.GDS_NO)
+                      LEFT OUTER JOIN FILE_GROUP C ON (B.FILE_GROUP_NO = C.FILE_GROUP_NO)
+                      LEFT OUTER JOIN FILE_DETAIL D ON (C.FILE_GROUP_NO = D.FILE_GROUP_NO)
+		WHERE MEM_NO = #{userNo}
+		ORDER BY d.file_sn DESC
+	</select>
+	
+	
+	<!-- 장바구니가 생성되였는지 확인 -->
+	<select id="getCartNo" parameterType="com.ohot.vo.UsersVO" resultType="String">
+	   SELECT DISTINCT(cart_no)
+  		FROM CART
+	   WHERE MEM_NO = #{userNo}
+	</select>
+	
+	<!-- cart 단일 상품 비우기 -->
+	<delete id="cartDelete" parameterType="com.ohot.shop.vo.CartVO">
+		/* com.ohot.shop.mapper.CartMapper.cartDelete */
+		
+		DELETE 
+		  FROM CART 
+		 WHERE gds_no = #{gdsNo} 
+		   AND mem_no = #{memNo} 
+		   AND prod_option = #{prodOption}
+	</delete>
+	
+	<!-- cart 여러개 상품 비우기 -->
+	<!-- DELETE FROM CART WHERE (gds_no = ? AND mem_no = ?) or (gds_no = ? AND mem_no = ?) -->
+	<delete id="cartDeleteList" parameterType="com.ohot.shop.vo.CartVO">
+		/* com.ohot.shop.mapper.CartMapper.cartDeleteList */
+		
+		DELETE 
+		  FROM CART
+		WHERE
+		<foreach collection="cartVOList" item="cartVO" open="" close="" separator="or" index="idx">
+			(
+					gds_no = #{cartVO.gdsNo} 
+				AND mem_no = #{cartVO.memNo} 
+				AND prod_option = #{cartVO.prodOption}
+			)
+		</foreach>
+	</delete>
+	
+	<!-- 상품이 있는지 확인 
+	 com.ohot.shop.mapper.CartMapper.isAlreadyInCart 
+	 CartVO(cartNo=2025041149, gdsNo=53, memNo=9, qty=1, amount=10900, prodOption=S, goodsVO=null)
+	 -->
+	<select id="isAlreadyInCart" parameterType="com.ohot.shop.vo.CartVO" resultType="int">
+		/* com.ohot.shop.mapper.CartMapper.isAlreadyInCart */
+		SELECT COUNT(*)
+		  FROM CART
+		 WHERE gds_no = #{gdsNo} AND mem_no = #{memNo}  
+		 	   <if test="prodOption != null and prodOption != ''">
+		 	     AND prod_option = #{prodOption}
+		 	   </if>
+	</select>
+	
+	<update id="cartUpdate" parameterType="com.ohot.shop.vo.CartVO">
+		UPDATE CART
+		   SET qty = qty + #{qty}, amount = amount + #{amount} 
+		 WHERE gds_no = #{gdsNo} AND mem_no = #{memNo}
+	</update>
+	
+	<!-- 장바구니에 상품이 있는지 확인
+	public int isAlreadyInCart2(CartVO cartVO) 
+	CartVO(cartNo=2025041149, gdsNo=53, memNo=9, qty=1, amount=10900, prodOption=S, goodsVO=null)
+	-->
+	<select id="isAlreadyInCart2" parameterType="com.ohot.shop.vo.CartVO" resultType="int">
+		SELECT NVL(MAX(qty), 0)
+		FROM CART 
+		WHERE gds_no = #{gdsNo} 
+		AND mem_no = #{memNo} 
+		<if test="prodOption!=null and prodOption!=''">
+			AND prod_option = #{prodOption}
+		</if>
+	</select>
+</mapper>

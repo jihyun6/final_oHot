@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.shop.mapper.TicketMapper">
+	<select id="ticketList" resultMap="goodsMap">
+		SELECT 
+				g.gds_no
+				, g.gds_type
+				, g.gds_nm
+				, g.expln
+				, g.comm_code_grp_no
+				, g.art_group_no
+				, g.art_no
+				, g.file_group_no
+			    , t.tk_no
+			    , t.tk_ctgr
+			    , t.tk_lctn
+			    , TO_CHAR(TO_DATE(T.TK_START_YMD, 'YYYYMMDD'),'YYYY-MM-DD') AS TK_START_YMD
+		        , TO_CHAR(TO_DATE(T.TK_FINISH_YMD, 'YYYYMMDD'),'YYYY-MM-DD') AS TK_FINISH_YMD
+			    ,(SELECT tf.file_save_locate
+		             FROM file_detail tf
+	 	            WHERE tf.file_group_no = t.poster_file) AS tk_file_save_locate
+	 	        ,(SELECT a.art_group_nm FROM artist_group a WHERE a.art_group_no = g.art_group_no) AS art_group_nm
+                ,(SELECT a.art_act_nm FROM artist a WHERE a.art_no = g.art_no) AS art_act_nm
+	 	 FROM goods g
+	 	 LEFT JOIN ticket t ON g.gds_no = t.gds_no
+		WHERE g.comm_code_grp_no='GD02'
+	      AND g.gds_del_yn='N'
+	        <if test="category != null and category != ''">
+	            AND t.tk_ctgr = #{tkCtgr}
+	        </if>
+	    ORDER BY TK_START_YMD DESC
+	</select>
+	
+	<select id="ticketDetail" parameterType="int" resultMap="goodsMap">
+		SELECT 
+				T.TK_NO
+				, T.TK_CTGR
+				, T.TK_LCTN
+				, TO_CHAR(TO_DATE(T.TK_START_YMD, 'YYYYMMDD'),'YYYY-MM-DD') AS TK_START_YMD
+		       , TO_CHAR(TO_DATE(T.TK_FINISH_YMD, 'YYYYMMDD'),'YYYY-MM-DD') AS TK_FINISH_YMD
+		       , T.POSTER_FILE
+		       , T.TK_VPRICE
+		       , T.TK_RPRICE
+		       , T.TK_SPRICE
+		       , T.TK_RUNTIME
+			   , T.TK_LCTN_ADDRESS
+		       , TD.TK_DETAIL_NO
+		       , TO_CHAR(TO_DATE(td.tk_ymd, 'YYYYMMDD'),'YYYY-MM-DD') AS tk_ymd
+		       , TD.TK_ROUND
+		       , G.GDS_NO
+		       , G.GDS_TYPE
+		       , G.GDS_NM
+		       , G.UNIT_PRICE
+		       , G.EXPLN
+		       , G.PIC
+		       , G.COMM_CODE_GRP_NO
+		       , G.REG_DT
+		       , G.ART_GROUP_NO
+		       , G.ART_NO
+		       , G.FILE_GROUP_NO
+		       , F.FILE_SN
+		       , F.FILE_GROUP_NO
+		       , F.FILE_ORIGINAL_NAME
+		       , F.FILE_SAVE_NAME
+		       , F.FILE_SAVE_LOCATE
+		       , F.FILE_SIZE
+		       , F.FILE_SAVE_DATE 
+		       , (SELECT TF.FILE_SAVE_LOCATE
+		            FROM FILE_DETAIL TF
+	 	           WHERE TF.FILE_GROUP_NO = T.POSTER_FILE) AS TK_FILE_SAVE_LOCATE
+	 	       ,(SELECT AG.ART_GROUP_NM FROM ARTIST_GROUP AG WHERE AG.ART_GROUP_NO = G.ART_GROUP_NO) AS ART_GROUP_NM
+               ,(SELECT A.ART_ACT_NM FROM ARTIST A WHERE A.ART_NO = G.ART_NO) AS ART_ACT_NM
+		FROM GOODS G
+	    LEFT JOIN TICKET T ON G.GDS_NO = T.GDS_NO
+	    LEFT JOIN TK_DETAIL TD ON T.TK_NO = TD.TK_NO
+	    LEFT JOIN FILE_GROUP FG ON G.FILE_GROUP_NO = FG.FILE_GROUP_NO
+	    LEFT JOIN FILE_DETAIL F ON F.FILE_GROUP_NO = FG.FILE_GROUP_NO
+	    WHERE G.GDS_NO = #{gdsNo}
+	    ORDER BY tk_ymd, TK_ROUND
+	</select>
+	
+		
+	<select id="tkSeat" parameterType="long" resultType="com.ohot.shop.vo.SeatVO">
+		SELECT 
+				s.seat_no
+				,s.seat_grade
+				,s.tk_lctn
+				,s.seat_floor
+				,s.seat_section
+				,s.seat_row
+				,s.seat_detail_no
+				,tr.rsvtn_enum
+		FROM seat s
+		LEFT JOIN tk_rsvtn tr ON s.seat_no = tr.seat_no AND tr.tk_detail_no =#{tkDetailNo}
+		ORDER BY s.seat_no
+	</select>
+	
+	<select id="countMemBought" parameterType="com.ohot.shop.vo.TkRsvtnVO" resultType="int">
+		SELECT COUNT(*) 
+		  FROM tk_rsvtn 
+		 WHERE 1=1
+	  	   AND mem_no = #{memNo}
+		   AND tk_detail_no = #{tkDetailNo}
+		   AND rsvtn_enum =2
+	</select>
+	
+	<select id="seatTkDetail" parameterType="long" resultMap="ticketMap">
+		SELECT 
+				  td.tk_detail_no 
+				, TO_CHAR(TO_DATE(td.tk_ymd, 'YYYYMMDD'),'YYYY-MM-DD') AS tk_ymd
+				, td.tk_round
+				, td.tk_no
+				, td.gds_nm
+				, t.gds_no
+				, t.tk_vprice
+		        , t.tk_rprice
+		        , t.tk_sprice
+		        , (SELECT F.FILE_SAVE_LOCATE
+		            FROM FILE_DETAIL F
+	 	           WHERE F.FILE_GROUP_NO = T.POSTER_FILE) AS TK_FILE_SAVE_LOCATE
+		FROM  ticket t 
+		LEFT JOIN tk_detail td ON td.tk_no = t.tk_no
+		LEFT JOIN FILE_DETAIL F ON F.FILE_GROUP_NO = T.POSTER_FILE
+		WHERE t.tk_no=#{tkNo}
+	</select>
+	
+	<select id="seatCurrentEnum" resultType="int" parameterType="com.ohot.shop.vo.TkRsvtnVO">
+		SELECT COUNT(*)
+		FROM tk_rsvtn
+		WHERE 1=1
+		AND tk_detail_no = #{tkDetailNo}
+        AND seat_no = #{seatNo}
+        AND rsvtn_enum IN (1, 2)
+	</select>
+	
+	<insert id="tkRsvtn" parameterType="com.ohot.shop.vo.TkRsvtnVO" >
+		MERGE INTO tk_rsvtn tkr
+	    USING (SELECT #{tkDetailNo} AS tk_detail_no, #{seatNo} AS seat_no FROM dual) src
+	    ON (
+	        tkr.tk_detail_no = src.tk_detail_no
+	        AND tkr.seat_no = src.seat_no
+	    )
+	    WHEN MATCHED THEN
+	        UPDATE SET
+	            tkr.rsvtn_enum = 1,
+	            tkr.rsvtn_dt = SYSDATE,
+	            tkr.mem_no = #{memNo}
+	    WHEN NOT MATCHED THEN
+	        INSERT (
+	            tk_rsvtn,
+	            rsvtn_dt,
+	            rsvtn_enum,
+	            mem_no,
+	            tk_detail_no,
+	            seat_no
+	        )
+	        VALUES (
+	            (SELECT NVL(MAX(tk_rsvtn),0)+1 FROM tk_rsvtn),
+	            SYSDATE,
+	            1,
+	            #{memNo},
+	            #{tkDetailNo},
+	            #{seatNo}
+	        )
+	</insert>
+	
+	<update id="resetUnpaidSeats">
+		UPDATE tk_rsvtn
+		   SET rsvtn_enum =0
+		 WHERE rsvtn_enum =1
+		   AND rsvtn_dt &lt; SYSDATE -(1/2880)
+	</update>
+	
+	<insert id="replyInsert" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="replyNo" >
+				SELECT NVL(MAX(REPLY_NO),0)+1 FROM COMMUNITY_REPLY
+		</selectKey>
+		INSERT INTO community_reply (
+				reply_no
+				, reply_content
+				, reply_delyn
+				, reply_create_dt
+				, mem_no
+				, tk_no
+				, com_profile_no
+				, media_post_no
+				, url_category
+				)
+		VALUES(
+				#{replyNo}
+				,#{replyContent}
+				,'N'
+				,SYSDATE
+				,#{memNo}
+				,#{tkNo}
+				,0
+				,0
+				,#{urlCategory}
+		)
+	</insert>
+	
+	<select id="replyList" parameterType="long" resultType="com.ohot.home.community.vo.CommunityReplyVO">
+		SELECT 
+			    cr.reply_no
+			   , cr.reply_content
+			   , TO_CHAR(cr.reply_create_dt,'YYYY-MM-DD HH24:MI:SS') AS rep_create_date
+			   , cr.mem_no
+			   , cr.tk_no
+			   , (SELECT m.mem_last_name || m.mem_first_name 
+			     FROM member m 
+			     WHERE m.mem_no = cr.mem_no) AS mem_nm
+		 FROM community_reply cr
+		WHERE 1=1
+		  AND cr.tk_no =  #{tkNo}
+		  AND reply_delyn ='N'
+		ORDER BY rep_create_date DESC
+	</select>
+	
+	<update id="replyUpdate" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+		UPDATE COMMUNITY_REPLY
+		   SET reply_content = #{replyContent}
+		 WHERE REPLY_NO=#{replyNo}
+	</update>
+	
+	<update id="replyDelete" parameterType="int">
+		UPDATE COMMUNITY_REPLY
+		   SET reply_delyn ='Y'
+		 WHERE REPLY_NO=#{replyNo}
+	</update>
+
+	<resultMap type="com.ohot.shop.vo.GoodsVO" id="goodsMap">
+		<result property="qty" column="QTY"/>
+		<result property="gdsDelYn" column="GDS_DEL_YN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="unitPrice" column="UNIT_PRICE"/>
+		<result property="expln" column="EXPLN"/>
+		<result property="pic" column="PIC"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	    <association property="fileGroupVO"  resultMap="fileGroupMap"/>
+	    <association property="ticketVO"  resultMap="ticketMap"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.TicketVO" id="ticketMap">
+		<result property="posterFile" column="POSTER_FILE"/>
+		<result property="tkVprice" column="TK_VPRICE"/>
+		<result property="tkRprice" column="TK_RPRICE"/>
+		<result property="tkSprice" column="TK_SPRICE"/>
+		<result property="tkNo" column="TK_NO"/>
+		<result property="tkCtgr" column="TK_CTGR"/>
+		<result property="tkLctn" column="TK_LCTN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="tkStartYmd" column="TK_START_YMD"/>
+		<result property="tkFinishYmd" column="TK_FINISH_YMD"/>
+		<result property="tkFileSaveLocate" column="TK_FILE_SAVE_LOCATE"/>
+		<result property="tkRuntime" column="TK_RUNTIME"/>
+		<result property="tkLctnAddress" column="TK_LCTN_ADDRESS"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"/>
+		<collection property="tkDetailVOList" resultMap="tkDetailMap" />
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.TkDetailVO" id="tkDetailMap">
+		<result property="tkDetailNo" column="TK_DETAIL_NO"/>
+		<result property="tkYmd" column="TK_YMD"/>
+		<result property="tkRound" column="TK_ROUND"/>
+		<result property="tkNo" column="TK_NO"/>
+		<result property="gdsNm" column="GDS_NM"/>
+	</resultMap>
+	
+		<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+</mapper>

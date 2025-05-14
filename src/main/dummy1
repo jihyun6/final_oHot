@@ -1,0 +1,36 @@
+		   WITH T AS (
+		         SELECT
+		            ROW_NUMBER() OVER(ORDER BY A.report_reg_dt DESC) RNUM
+		            , A.report_post_no
+		            , A.report_board_no
+		            , A.report_title
+		            , A.report_cn
+		            , A.report_reg_dt
+		            , A.report_chg_dt
+		            , A.report_del_yn
+		            , A.mem_no
+		            , A.report_cnt
+		            , A.report_termination
+		            , A.caller_email
+		            , A.file_group_no
+		            , A.report_result
+		            , A.report_gubun
+		            , B.mem_first_name || ' ' || b.mem_last_name AS MEM_NAME
+		            , (SELECT E.MEM_FIRST_NAME || E.MEM_LAST_NAME FROM MEMBER E WHERE
+				      E.MEM_NO = (SELECT D.MEM_NO FROM COMMUNITY_POST D WHERE D.BOARD_NO =
+				      a.report_board_no)) PI_MEM_NAME
+		            , (SELECT E.MEM_EMAIL FROM MEMBER E WHERE E.MEM_NO = (SELECT D.MEM_NO
+				      FROM COMMUNITY_POST D WHERE D.BOARD_NO = a.report_board_no))
+				      PI_MEM_EMAIL
+		        FROM
+		            report_board_post A
+		            LEFT JOIN MEMBER B ON A.mem_no = B.mem_no
+		        WHERE 1 = 1
+		        
+		       <if test="reportGubun != null and reportGubun != '' and reportGubun != 'all'">
+				    AND A.REPORT_GUBUN = #{reportGubun}
+				</if>
+
+		  )
+		  SELECT T.* FROM T
+		  WHERE T.RNUM BETWEEN (#{currentPage} * #{size})-(#{size}-1) AND (#{currentPage} * #{size})

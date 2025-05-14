@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.live.mapper.StreamMapper">
+	
+	<!-- 방송생성 -->
+	<insert id="createStream" parameterType="com.ohot.home.live.vo.StreamVO">
+		<selectKey keyProperty="streamNo" resultType="int" order="BEFORE">
+			SELECT NVL(MAX(stream_no), 0)+1 AS stream_no FROM streams
+		</selectKey>
+		INSERT INTO STREAMS (/*com.ohot.home.live.mapper.StreamMapper.createStream */
+			stream_no,
+            art_group_no,
+            stream_title,
+            stream_expln,
+            stream_start_dt,
+            stream_stat,
+            stream_thmimg_url,
+            stream_view_cnt,
+            stream_viewer_cnt,
+            stream_url,
+            stream_qty,
+            file_group_no,
+            stream_protocol,
+            stream_key
+        ) VALUES (
+        	#{streamNo},
+            #{artGroupNo},
+            #{streamTitle},
+            #{streamExpln},
+            #{streamStartDt},
+            #{streamStat},
+            #{streamThmimgUrl},
+            #{streamViewCnt},
+            #{streamViewerCnt},
+            #{streamUrl},
+            #{streamQty},
+            #{fileGroupNo},
+            #{streamProtocol},
+            #{streamKey}
+        )
+	</insert>
+	
+	<!--방송 조회  -->
+	<select id="getStream" parameterType="int" resultType="com.ohot.home.live.vo.StreamVO">
+		 SELECT /*com.ohot.home.live.mapper.StreamMapper.getStream*/
+            stream_no,
+            art_group_no,
+            stream_title,
+            stream_expln,
+            stream_start_dt,
+            stream_end_dt,
+            stream_stat,
+            stream_thmimg_url,
+            stream_view_cnt,
+            stream_viewer_cnt,
+            stream_url,
+            stream_qty,
+            file_group_no,
+            stream_protocol,
+            stream_key
+        FROM
+            streams
+        WHERE
+            stream_no = #{streamNo}
+	</select>
+	
+	<!-- 옵션별 방송 목록 조회 -->
+	<select id="getStreamList" parameterType="com.ohot.home.live.vo.StreamVO" resultType="com.ohot.home.live.vo.StreamVO">
+		SELECT
+		    stream_no
+		    ,art_group_no
+		    ,stream_title
+		    ,stream_expln
+		    ,stream_start_dt
+		    ,stream_stat
+		    ,stream_thmimg_url
+		    ,stream_view_cnt
+		    ,stream_viewer_cnt
+		    ,stream_url
+		FROM
+		    streams
+		WHERE 1=1
+		<if test="streamNo != 0">
+		    AND stream_no = #{streamNo}
+		</if>
+		<if test="artGroupNo != 0">
+		    AND art_group_no = #{artGroupNo}
+		</if>
+		<if test="streamStat != null and streamStat != ''">
+		    AND stream_stat = #{streamStat}
+		</if>
+		<if test="streamTitle != null and streamTitle != ''">
+		    AND stream_title LIKE '%' || #{streamTitle} || '%'
+		</if>
+		<if test="streamViewCnt &gt; 0">
+		    AND stream_view_cnt &gt;= #{streamViewCnt}
+		</if>
+		<if test="streamViewerCnt &gt; 0">
+		    AND stream_viewer_cnt &gt;= #{streamViewerCnt}
+		</if>
+		<if test="streamStartDt != null">
+		    AND stream_start_dt &gt;= #{streamStartDt}
+		</if>
+		<if test="streamEndDt != null">
+		    AND stream_end_dt &lt;= #{streamEndDt}
+		</if>
+		ORDER BY
+		<choose>
+		    <when test="sortBy != null and sortBy == 'viewers'">
+		        stream_viewer_cnt DESC
+		    </when>
+		    <when test="sortBy != null and sortBy == 'views'">
+		        stream_view_cnt DESC
+		    </when>
+		    <otherwise>
+		        stream_start_dt DESC
+		    </otherwise>
+		</choose>
+	</select>
+	
+	<!-- 아티스트 그룹 별 방송중인 방송 조회 -->
+	<select id="getStreamByArtGroupNo" parameterType="int" resultType="com.ohot.home.live.vo.StreamVO">
+		SELECT
+             stream_no
+            ,art_group_no
+            ,stream_title
+            ,stream_expln
+            ,stream_start_dt
+            ,stream_stat
+            ,stream_thmimg_url
+            ,stream_view_cnt
+            ,stream_viewer_cnt
+            ,stream_url
+        FROM
+            streams
+        WHERE 1=1
+        	AND stream_stat = 'start' 
+        <if test="artGroupNo != 0">
+        	AND art_group_no = #{artGroupNo}
+        </if>
+            
+	</select>
+	
+	<!-- 방송 상태 업데이트 -->
+	<update id="updateStream" parameterType="com.ohot.home.live.vo.StreamVO">
+		UPDATE streams
+		SET
+		    stream_stat = #{streamStat}
+		    <if test="streamUrl != null and streamUrl != ''">, stream_url = #{streamUrl}</if>
+		    <if test="streamStat == 'start'">, stream_start_dt = SYSDATE</if>
+		    <if test="streamStat == 'end'">, stream_end_dt = SYSDATE</if>
+		    <if test="streamKey != null and streamKey != ''">, stream_key = #{streamKey}</if>
+		    <if test="streamViewCnt >= 0">, stream_view_cnt = #{streamViewCnt}</if>
+		    <if test="streamViewerCnt >= 0">, stream_viewer_cnt = #{streamViewerCnt}</if>
+		WHERE
+		    stream_no = #{streamNo}
+	</update>
+	
+	 <!-- 회원 멤버십 여부 체크 -->
+    <select id="membershipCheck" parameterType="int" resultType="String">
+        SELECT MEMBERSHIP_YN
+        FROM COMMUNITY_PROFILE
+        WHERE COM_PROFILE_NO = #{comProfileNo}
+    </select>
+</mapper>

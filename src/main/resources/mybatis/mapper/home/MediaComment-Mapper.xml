@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.media.mapper.MediaCommentMapper">
+
+	<resultMap id="mediaReplyMap" type="com.ohot.dto.MediaReplyDTO">
+	    <result property="replyNo" column="reply_no"/>
+	    <result property="replyContent" column="reply_content"/>
+	    <result property="replyDelyn" column="reply_delyn"/>
+	    <result property="replyCreateDt" column="reply_create_dt"/>
+	    <result property="boardNo" column="board_no"/>
+	    <result property="artNo" column="art_no"/>
+	    <result property="memNo" column="mem_no"/>
+	    <result property="mediaPostNo" column="media_post_no"/>
+	    <result property="comProfileNo" column="com_profile_no"/>
+	    <result property="tkNo" column="tk_no"/>
+	    <result property="urlCategory" column="url_category"/>
+	    
+	    <!-- 프로필 정보 -->
+	    <result property="profileMemNo" column="cp_mem_no"/>
+	    <result property="comNm" column="com_nm"/>
+	    <result property="comFileGroupNo" column="com_file_group_no"/>
+	    <result property="comJoinYmd" column="com_join_ymd"/>
+	    <result property="comDelyn" column="com_delyn"/>
+	    <result property="comAuth" column="com_auth"/>
+	    <result property="artGroupNo" column="art_group_no"/>
+	    <result property="membershipYn" column="membership_yn"/>
+	    
+	    <!-- 파일 정보 -->
+	    <result property="fileSaveLocate" column="file_save_locate"/>
+	    <result property="fileSaveName" column="file_save_name"/>
+	</resultMap>
+	
+
+	<insert id="createReply" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		<selectKey keyProperty="replyNo" order="BEFORE" resultType="Integer">
+			SELECT NVL(MAX(REPLY_NO),0)+1
+			FROM COMMUNITY_REPLY
+		</selectKey>
+		INSERT INTO community_reply (
+			  reply_no
+			, reply_content
+			, reply_delyn
+			, reply_create_dt
+			, board_no
+			, art_no
+			, mem_no
+			, media_post_no
+			, com_profile_no
+			, url_category
+			)
+		VALUES (
+			  #{replyNo}
+			, #{replyContent}
+			, 'N'
+			, SYSDATE
+			, DEFAULT
+			, #{artNo}
+			, #{memNo}
+			, #{mediaPostNo}
+			, #{comProfileNo}
+			, #{urlCategory}
+			)
+	</insert>
+	
+	<!-- 조건별 댓글 리스트 조회 -->
+	<select id="getReplyList" parameterType="Map" resultMap="mediaReplyMap">
+		SELECT /*com.ohot.home.media.mapper.MediaCommentMapper.getReplyList*/
+	           cr.reply_no
+	          ,cr.reply_content
+	          ,cr.reply_delyn
+	          ,TO_CHAR(cr.reply_create_dt, 'YYYY-MM-DD HH24:MI') as reply_create_dt
+	          ,cr.board_no
+	          ,cr.art_no
+	          ,cr.mem_no
+	          ,cr.media_post_no
+	          ,cr.com_profile_no
+	          ,cr.tk_no
+	          ,cr.url_category
+	          
+	             /* 프로필 정보 */
+	          ,cp.mem_no
+	          ,cp.com_nm
+	          ,cp.com_file_group_no
+	          ,cp.com_join_ymd
+	          ,cp.com_delyn
+	          ,cp.com_auth
+	          ,cp.art_group_no
+	          ,cp.membership_yn
+	          
+	            /* 파일 정보 */
+	          ,fd.file_save_locate
+	          ,fd.file_save_name
+	    FROM community_reply cr
+	    INNER JOIN community_profile cp ON cp.com_profile_no = cr.com_profile_no
+         LEFT OUTER JOIN file_group fg ON(cp.com_file_group_no = fg.file_group_no)
+        LEFT OUTER JOIN (
+	              SELECT 
+	              		file_sn
+	              		, file_group_no
+	              		, file_original_name
+	              		, file_save_name
+	                    , file_save_locate
+	                    , file_size
+	                    , file_ext
+	                    , file_mime
+	                    , file_fancysize
+	                    , file_save_date
+	                    , file_downcount
+	                    , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+	                FROM file_detail
+	       ) FD ON fg.file_group_no = fd.file_group_no AND FD.RN = 1
+	    WHERE 1=1
+	    <if test="artGroupNo != null">
+	        AND cp.art_group_no = #{artGroupNo}
+	    </if>
+	    <if test="mediaPostNo != null">
+	        AND cr.media_post_no = #{mediaPostNo}
+	    </if>
+	    <if test="replyDelYn != null and replyDelYn != ''">
+	    	AND cr.reply_delyn = #{replyDelYn}
+	    </if>
+	    <if test="startDate != null and endDate != null">
+	    	AND cr.reply_create_dt BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD') 
+	    </if>
+	    <if test="comNm != null and comNm != ''">
+	    	AND cp.com_nm = #{comNm}
+	    </if>
+	    ORDER BY cr.reply_create_dt DESC
+	</select>
+	
+	<!-- 댓글 수정 -->
+	<update id="updateReply" parameterType="Map">
+		UPDATE community_reply
+		SET reply_content = #{replyContent}
+		WHERE reply_no = #{replyNo}
+	</update>
+	
+	<!-- 댓글 삭제  -->
+	<update id="deleteReply" parameterType="int">
+        UPDATE COMMUNITY_REPLY
+        SET REPLY_DELYN = 'Y'
+        WHERE REPLY_NO = #{replyNo}
+	</update>
+	
+</mapper>

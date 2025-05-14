@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.admin.mapper.AdminReportMapper">
+
+	<!-- 신고 목록 총 개수
+	public int getTotalCount(Map<String, Object> data) -->
+	<select id="getTotalCount" resultType="int" parameterType="hashMap">
+        SELECT count(*)
+		FROM REPORT_BOARD_POST R
+		LEFT JOIN MEMBER M ON R.MEM_NO = M.MEM_NO
+		WHERE R.REPORT_DEL_YN = 'N'
+		<if test="reportResult != null and reportResult != ''">
+            AND R.REPORT_RESULT = #{reportResult}
+        </if>
+        <if test="reportGubun != null and reportGubun != ''">
+            AND R.REPORT_GUBUN = #{reportGubun}
+        </if>
+        <if test="piMemName != null and piMemName != ''">
+		    AND REPLACE(M.MEM_LAST_NAME || ' ' || M.MEM_FIRST_NAME, ' ', '') LIKE '%' || REPLACE(#{piMemName}, ' ', '') || '%'
+		</if>
+ 		<if test="startDate != null and startDate != ''">
+		    AND R.REPORT_REG_DT &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDate != null and endDate != ''">
+		    AND TRUNC(R.REPORT_REG_DT) BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+		</if>
+	
+    </select>
+    
+    <!-- 신고 관리 리스트 -->	
+	<select id="reportListSearchPost" resultMap="reportmanageMapInfo">
+    WITH T AS (
+        SELECT
+            ROW_NUMBER() OVER(ORDER BY R.REPORT_POST_NO DESC) AS RRNUM,
+            R.REPORT_POST_NO AS REPORT_POST_NO,
+		    CASE WHEN R.REPORT_GUBUN='게시글' THEN (SELECT MAX(P.MEM_NO) FROM COMMUNITY_POST P WHERE P.BOARD_NO = R.REPORT_BOARD_NO) 
+		         WHEN R.REPORT_GUBUN='댓글' THEN (SELECT MAX(E.MEM_NO) FROM COMMUNITY_REPLY E WHERE E.REPLY_NO = R.REPORT_BOARD_NO) 
+		         ELSE (SELECT MAX(E2.MEM_NO) FROM COMMUNITY_REPLY E2 WHERE E2.REPLY_NO = R.REPORT_BOARD_NO) 
+		    END MEM_NO,
+		    (SELECT F.MEM_EMAIL FROM MEMBER F WHERE F.MEM_NO = (
+		        CASE WHEN R.REPORT_GUBUN='게시글' THEN (SELECT MAX(P.MEM_NO) FROM COMMUNITY_POST P WHERE P.BOARD_NO = R.REPORT_BOARD_NO) 
+		         WHEN R.REPORT_GUBUN='댓글' THEN (SELECT MAX(E.MEM_NO) FROM COMMUNITY_REPLY E WHERE E.REPLY_NO = R.REPORT_BOARD_NO) 
+		         ELSE (SELECT MAX(E2.MEM_NO) FROM COMMUNITY_REPLY E2 WHERE E2.REPLY_NO = R.REPORT_BOARD_NO) 
+		        END)
+		    ) MEM_EMAIL,
+		    R.REPORT_BOARD_NO,
+            R.REPORT_GUBUN AS REPORT_GUBUN,
+            R.REPORT_TITLE AS REPORT_TITLE,
+            PM.MEM_LAST_NAME || ' ' || PM.MEM_FIRST_NAME AS PI_MEM_NAME,
+            R.REPORT_REG_DT AS REPORT_REG_DT,
+            R.REPORT_TERMINATION AS REPORT_TERMINATION,
+            R.REPORT_RESULT AS REPORT_RESULT,
+            R.REPORT_DEL_YN AS REPORT_DEL_YN
+        FROM REPORT_BOARD_POST R
+        LEFT JOIN MEMBER RM ON R.MEM_NO = RM.MEM_NO 
+        LEFT JOIN COMMUNITY_POST CP ON R.REPORT_BOARD_NO = CP.BOARD_NO
+        LEFT JOIN MEMBER PM ON CP.MEM_NO = PM.MEM_NO WHERE R.REPORT_DEL_YN = 'N'
+        <if test="reportResult != null and reportResult != ''">
+            AND R.REPORT_RESULT = #{reportResult}
+        </if>
+        <if test="reportGubun != null and reportGubun != ''">
+            AND R.REPORT_GUBUN = #{reportGubun}
+        </if>
+        <if test="piMemName != null and piMemName != ''">
+		    AND REPLACE(PM.MEM_LAST_NAME || ' ' || PM.MEM_FIRST_NAME, ' ', '') LIKE '%' || REPLACE(#{piMemName}, ' ', '') || '%'
+		</if>
+  		<if test="startDate != null and startDate != ''">
+		    AND R.REPORT_REG_DT &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDate != null and endDate != ''">
+		    AND TRUNC(R.REPORT_REG_DT) BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+		</if>
+	
+    )
+    SELECT T.* FROM T
+    WHERE RRNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+	
+	<select id="reportmanageDetail"
+		resultType="com.ohot.vo.ReportmanageVO" resultMap="reportmanageMap">
+		SELECT
+		a.report_post_no
+		, a.report_board_no
+		, (SELECT E.MEM_FIRST_NAME || E.MEM_LAST_NAME FROM MEMBER E WHERE
+		  E.MEM_NO = (SELECT D.MEM_NO FROM COMMUNITY_POST D WHERE D.BOARD_NO =
+		  a.report_board_no)) PI_MEM_NAME
+		, (SELECT E.MEM_EMAIL FROM MEMBER E WHERE E.MEM_NO = (SELECT D.MEM_NO
+		FROM COMMUNITY_POST D WHERE D.BOARD_NO = a.report_board_no))
+		PI_MEM_EMAIL
+		, a.report_title
+		, a.report_cn
+		, a.report_reg_dt
+		, a.report_chg_dt
+		, a.report_del_yn
+		, a.mem_no
+		, a.report_cnt
+		, a.report_termination
+		, a.caller_email
+		, a.file_group_no
+		, a.report_result
+		, b.mem_no
+		, b.mem_email
+		, b.mem_first_name || '' || b.mem_last_name AS MEM_NAME
+		, C.FILE_REGDATE
+		, D.FILE_SN, D.FILE_ORIGINAL_NAME, D.FILE_SAVE_NAME,
+		  D.FILE_SAVE_LOCATE, D.FILE_SIZE
+		, D.FILE_EXT, D.FILE_MIME, D.FILE_FANCYSIZE, D.FILE_SAVE_DATE,
+		  D.FILE_DOWNCOUNT
+		
+		FROM report_board_post a INNER JOIN member b ON(a.mem_no = b.mem_no)
+		LEFT OUTER JOIN FILE_GROUP C ON(A.FILE_GROUP_NO = C.FILE_GROUP_NO)
+		LEFT OUTER JOIN FILE_DETAIL D ON(C.FILE_GROUP_NO = D.FILE_GROUP_NO)
+		WHERE 1
+		= 1
+		AND report_post_no = #{reportPostNo}
+	</select>
+	
+	<!-- 신고글에 대한 관리자의 처리 public int reportUpdate(ReportmanageVO reportmanageVO 
+		ReportmanageVO(reportPostNo=3, .. reportResult=002,... -->
+	<update id="아직미정"
+		parameterType="com.ohot.vo.ReportmanageVO">
+		UPDATE report_board_post
+		SET REPORT_RESULT =
+		#{reportResult}
+		WHERE report_post_no = #{reportPostNo}
+
+	</update>
+	
+	
+	
+	<resultMap type="com.ohot.vo.ReportmanageVO" id="reportmanageMapInfo">
+		<result property="reportPostNo" column="REPORT_POST_NO"/>
+		<result property="reportBoardNo" column="REPORT_BOARD_NO"/>
+		<result property="reportGubun" column="REPORT_GUBUN"/>
+		<result property="piMemEmail" column="MEM_EMAIL"/>
+		<result property="reportTitle" column="REPORT_TITLE"/>
+		<result property="piMemName" column="PI_MEM_NAME"/>
+		<result property="reportRegDt" column="REPORT_REG_DT"/>
+		<result property="reportTermination" column="REPORT_TERMINATION"/>
+		<result property="reportResult" column="REPORT_RESULT"/>
+		<result property="reportDelYn" column="REPORT_DEL_YN"/>
+		<result property="memNo" column="MEM_NO"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.ReportmanageVO"
+		id="reportmanageMap">
+		<result property="reportPostNo" column="REPORT_POST_NO" />
+		<result property="reportBoardNo" column="REPORT_BOARD_NO" />
+		<result property="reportTitle" column="REPORT_TITLE" />
+		<result property="reportGubun" column="REPORT_GUBUN" />
+		<result property="reportCn" column="REPORT_CN" />
+		<result property="reportRegDt" column="REPORT_REG_DT" />
+		<result property="reportChgDt" column="REPORT_CHG_DT" />
+		<result property="reportDelYn" column="REPORT_DEL_YN" />
+		<result property="memNo" column="MEM_NO" />
+		<result property="memEmail" column="MEM_EMAIL" />
+		<result property="memName" column="MEM_NAME" />
+		<result property="reportCnt" column="REPORT_CNT" />
+		<result property="reportTermination"
+			column="REPORT_TERMINATION" />
+		<result property="callerEmail" column="CALLER_EMAIL" />
+		<result property="fileGroupNo" column="FILE_GROUP_NO" />
+		<result property="reportResult" column="REPORT_RESULT" />
+		<result property="piMemName" column="PI_MEM_NAME" />
+		<result property="piMemEmail" column="PI_MEM_EMAIL" />
+		<association property="fileGroupVO"
+			resultMap="fileGroupMap"></association>
+	</resultMap>
+
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO" />
+		<result property="fileRegdate" column="FILE_REGDATE" />
+		<collection property="fileDetailVOList"
+			resultMap="fileDetailMap"></collection>
+	</resultMap>
+
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN" />
+		<result property="fileGroupNo" column="FILE_GROUP_NO" />
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME" />
+		<result property="fileSaveName" column="FILE_SAVE_NAME" />
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="fileExt" column="FILE_EXT" />
+		<result property="fileMime" column="FILE_MIME" />
+		<result property="fileFancysize" column="FILE_FANCYSIZE" />
+		<result property="fileSaveDate" column="FILE_SAVE_DATE" />
+		<result property="fileDowncount" column="FILE_DOWNCOUNT" />
+	</resultMap>
+	
+	<!-- 
+	REPORT_BOARD_POST테이블의 REPORT_RESULT 컬럼의 값을 UPDATE함
+	public int reportBoardPostUpdate(ReportmanageVO reportmanageVO)
+	
+	ReportmanageVO(reportPostNo=1, reportBoardNo=0, reportTitle=null, reportCn=null, reportRegDt=null, reportChgDt=null
+	, reportDelYn=null, memNo=0, reportCnt=0, reportTermination=null, reportResult=004
+	, memberVO=null..
+	 -->
+	 <update id="reportBoardPostUpdate" parameterType="com.ohot.vo.ReportmanageVO">
+	 	UPDATE REPORT_BOARD_POST
+	 	SET    REPORT_RESULT = #{reportResult}
+	 		<if test="reportResult!=null and reportResult!=''">
+	 			<if test="reportResult=='004'"><!-- 활동정지3일 -->
+	 		 		, REPORT_END_DT = SYSDATE + 3
+	 			</if>
+	 			<if test="reportResult!='004'"><!-- 신고해지 및 미처리 -->
+	 		 		, REPORT_END_DT = null
+	 			</if>
+	 		</if>
+	 	WHERE  REPORT_POST_NO = #{reportPostNo}
+	 </update>
+	 
+	 <!--2) MEMBER 테이블의 MEM_STAT_SEC_CODE_NO 컬럼의 값을    '001','004','001' 또는 로 UPDATE
+	public int memberCodeNoUpdate(ReportmanageVO reportmanageVO)
+	
+		ReportmanageVO(reportPostNo=1, reportBoardNo=0, reportTitle=null, reportCn=null, reportRegDt=null, reportChgDt=null
+		, reportDelYn=null, memNo=0, reportCnt=0, reportTermination=null, reportResult=004
+		, memberVO=null..,piMemEmail=o@naver.com
+	  -->
+	 <update id="memberCodeNoUpdate" parameterType="com.ohot.vo.ReportmanageVO">
+	 	UPDATE MEMBER M
+	 	SET    
+	 		<if test="reportResult=='004'">
+	 			M.MEM_STAT_SEC_CODE_NO = '004'
+	 		</if>
+	 		<if test="reportResult!='004'">
+	 			M.MEM_STAT_SEC_CODE_NO = '001'
+	 		</if>
+	 	WHERE  M.MEM_NO = (SELECT R.MEM_NO FROM MEMBER R WHERE R.MEM_EMAIL = #{piMemEmail}) 
+	 </update>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

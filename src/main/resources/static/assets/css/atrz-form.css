@@ -1,0 +1,101 @@
+@charset "UTF-8";
+
+body { 
+	font-family: '맑은 고딕', sans-serif; 
+}
+table { 
+	border-collapse: collapse; 
+	width: 100%; 
+	margin-bottom: 20px; 
+}
+th, td { 
+	border: 1px solid #999; padding: 3px; 
+}
+th { 
+	background-color: #eee; 
+	text-align: center; 
+	width: 150px; 
+}
+h2 { 
+	text-align: center; 
+	margin: 30px 0 20px; 
+}
+.section-title { 
+	background-color: #ddd; 
+	text-align: center; 
+	font-weight: bold; 
+}
+input[type="text"], input[type="date"], input[type="number"], textarea {
+	width: 95%; 
+    padding: 5px;
+}
+textarea { 
+	resize: vertical; 
+}
+/* 상단 레이아웃 전체를 flex로 */
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 2%;
+  margin-bottom: 2%;
+}
+.info {
+  width: 45%;
+}
+.approval-line {
+  width: 50%;
+  display: flex;
+}
+.approval-line table { 
+	width: 100%; 
+	border: none;
+	table-layout: fixed;
+}
+.approval-line th, .approval-line td { 
+	border: 1px solid; 
+	text-align: center; 
+	height: 60px; 
+}
+
+.approval-table { 
+	width: 100%; table-layout: fixed; border-collapse: collapse; 
+}
+.approval-table th, .approval-table td { 
+      height: 30px; 
+      vertical-align: middle; 
+      padding: 4px; 
+      border: 1px solid;
+      text-align: center;
+}
+.approval-line td:not(.vertical-text) {
+    width: 33%; /* 수직 텍스트가 아닌 셀들은 동일한 너비로 설정 */
+}
+
+.vertical-text { 
+      writing-mode: vertical-rl; 
+      text-orientation: upright; 
+      white-space: nowrap;
+      height: 80px;
+      text-align: center;
+      vertical-align: middle;
+      background-color: #eee;
+      width : 25px !important;
+      
+}
+.clear { clear: both; }
+
+.stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.stamp img {
+  height: 40px;
+}
+.name {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+    
