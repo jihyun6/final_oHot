@@ -1,0 +1,409 @@
+/* 디엠 목록 시작 */
+
+#dmListContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: start;
+  max-height: 270px; /* 두 줄까지만 보여주고 넘는 건 잘라냄 */
+  overflow: hidden;
+}
+
+	/* 버튼 전체 영역 */
+	.btn-dmlist {
+	  display: inline-flex;                 /* ★ inline으로 float처럼 */
+	  align-items: center;
+	  background-color: #fff;
+	  border: none;
+	  border-radius: 30px;
+	  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+	  padding: 10px 16px;
+	  min-width: 200px;
+	  max-width: 230px;                    
+	  width: fit-content;          
+	  margin: 20px;
+	  transition: background-color 0.3s, box-shadow 0.3s;
+	}
+	
+	/* hover 효과 */
+	.btn-dmlist:hover {
+	  background-color: #f8f9fa;
+	  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+	}
+	
+	/* 로고 */
+	.btn-dmlist .logo-wrap {
+	  background-color: white;
+	  padding: 4px;
+	  border-radius: 50%;
+	  border: 2px solid white;
+	  width: 60px;
+	  height: 60px;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  flex-shrink: 0;
+	  margin-right: 12px;
+	}
+	
+	/* 로고 이미지 */
+	.btn-dmlist .logo-wrap img {
+	  width: 60px;
+	  height: 60px;
+	  border-radius: 50%;
+	}
+	
+	/* 텍스트 영역 */
+	.btn-dmlist .card-body {
+	  flex: 1;              /* 남은 공간을 텍스트가 채움 */
+	  min-width: 0;         /* overflow 처리 위해 필요할 수 있음 */
+	}
+	
+	.btn-dmlist .card-body h6 {
+	  font-weight: 700;
+	  font-size: 17px;
+	  margin: 0;
+	  white-space: nowrap;         /* 줄바꿈 방지 */
+	  overflow: hidden;            /* 넘치는 부분 숨김 */
+	  text-overflow: ellipsis;     /* 말줄임표 (...) 표시 */
+	  max-width: 100%;             /* 부모 영역 기준 */
+	  display: block;              /* 필요 시 inline을 block으로 */
+	  color: black !important;
+	}
+	
+/* 디엠 목록 끝 */
+
+/* 디엠 새로고침 버튼 시작 */
+	.svg-btn {
+	  background: none;     /* 배경 제거 */
+	  border: none;         /* 테두리 제거 */
+	  padding: 0;           /* 내부 여백 제거 */
+	  cursor: pointer;      /* 커서 포인터 */
+	  outline: none;        /* 클릭 시 외곽선 제거 */
+	}
+/* 디엠 새로고침 버튼 끝 */
+
+
+/* 아티스트 그룹 목록 시작*/
+	/* 구독한 그룹 백그라운드 */
+	.grayBackground{
+	  background-color: #F7F7F7; 
+	}
+	/* 그룹 카드 전체 박스 */
+	.card-artist {
+	  all: unset;
+	  display: block;
+	  width: 220px;
+	  background-color: #fff;
+	  border-radius: 12px;
+	  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+	  overflow: hidden;
+	  position: relative;
+	  text-align: center;
+	  font-size : 22px;
+	  cursor: pointer;
+	  transition: background-color 0.3s, box-shadow 0.3s;
+	}
+
+	
+	/* 전체 박스에 마우스 올렸을 때 */
+	.card-artist:hover {
+	  background-color: #f8f9fa; /* 은은한 회색 배경 */
+	  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* 조금 더 강조된 그림자 */
+	}
+	
+	/* 상단 이미지 */
+	.card-artist .bg-img {
+	  width: 100%;
+	  height: 200px;
+	  object-fit: cover;
+	  border-top-left-radius: 12px;
+	  border-top-right-radius: 12px;
+	}
+	
+	/* 가운데 겹쳐 있는 원형 로고 */
+	.card-artist .logo-wrap {
+	  position: absolute;
+	  top: 175px;
+	  left: 50%;
+	  transform: translateX(-50%);
+	  background-color: white;
+/* 	  padding: 4px; */
+	  border-radius: 50%;
+/* 	  border: 2px solid white; */
+	  width: 48px;
+	  height: 48px;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	}
+	
+	/* 로고 이미지 */
+	.card-artist .logo-wrap img {
+	  width: 48px;
+	  height: 48px;
+	  border-radius: 50%;
+	}
+	
+	/* 아티스트명 영역 */
+	.card-artist .card-body {
+	  padding-top: 28px;
+	  padding-bottom: 16px;
+	}
+	
+	.card-artist .card-body h6 {
+	  font-weight: 700;
+	  font-size: 16px;
+	  margin: 0;
+	  padding : 0 10px;
+	  display: -webkit-box;
+	  -webkit-line-clamp: 1;            /* 최대 줄 수 */
+	  -webkit-box-orient: vertical;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	  line-height: 1.4em;
+	  max-height: 2.8em;    
+	}
+	
+	/* 더보기 버튼 */
+#loadMoreBtn {
+  border: 2px solid #e1e1e1;
+  border-radius: 12px;
+  background-color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #F86D72;
+  white-space: nowrap;
+  display: none;
+}
+#closeBtn {
+  border: 2px solid #e1e1e1;
+  border-radius: 12px;
+  background-color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #318AFF;
+  white-space: nowrap;
+  visibility : hidden;
+}
+#loadMyCommunity {
+  border: 2px solid #e1e1e1;
+  border-radius: 12px;
+  background-color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #F86D72;
+  white-space: nowrap;
+  display: none;
+}
+#closeMyCommunity {
+  border: 2px solid #e1e1e1;
+  border-radius: 12px;
+  background-color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #318AFF;
+  white-space: nowrap;
+  display : none;
+}
+/*아티스트 그룹 목록 끝*/
+
+/* 굿즈 아티스트 그룹명 시작 */
+/* 아티스트 그룹 버튼 */
+.card-artistNm {
+  align-items: center;
+  background-color: #F7F7F7;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 16px;
+  min-width: 150px;
+  max-width: 250px;
+  height: auto;
+  width: fit-content;
+  margin: 0px;
+  white-space: nowrap;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* 텍스트 처리 (말줄임 처리) */
+.artistName {
+  display: -webkit-box;
+  font-weight: 500;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4em;
+  text-align: center;
+}
+
+/* 선택된 버튼 스타일 */
+.card-artistNm.active {
+  background-color: #111;
+  color: #fff;
+}
+
+/* 아티스트 버튼 영역 전체 래퍼 (줄 숨김/토글용) */
+#artistGroupListWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  max-height: 52px; /* 기본: 한 줄만 보이게 */
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* 더보기 버튼 스타일 */
+#toggleMoreBtn {
+	
+  border: 2px solid #e1e1e1;
+  border-radius: 12px;
+  background-color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #F86D72;
+  white-space: nowrap;
+  display: none; /* 초기엔 숨김 */
+}
+
+#toggleMoreBtn:hover {
+  background-color: #f7f7f7;
+}
+
+/* ▼/▲ 텍스트 스타일 */
+#toggleIcon {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 굿즈 카드 전체 박스 */
+.card-goods {
+  all: unset;
+  display: block;
+  width: 250px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.card-goods:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 굿즈 이미지 */
+.card-goods .bg-img {
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.goods-name {
+  width: 250px;
+  padding-left: 2px;
+}
+
+/* 굿즈 리스트 끝 */
+
+.swiper-slide {
+  width: auto; /* card-goods 너비에 따라 자동 */
+  display: flex;
+  justify-content: center;
+  margin-bottom : 50px;
+}
+
+
+/* 그룹프로필에서 쓰이는 멤버 정보 카드 시작*/
+
+	/* 버튼 전체 영역 */
+	.btn-artist {
+	  background: none;
+	  padding: 0;
+	  border: none;
+	  border-radius: 30px;
+	  width: 130px;
+	  height: 130px;                    
+	  margin-right: 20px;
+	}
+	
+	/* 로고 이미지 */
+	.btn-artist img {
+	  border-radius: 30px;
+	  width: 130px;
+	  height: 130px;
+	  margin-bottom : 10px;
+	}
+	
+.liveThumNail {
+	width: 400px;
+	height: 250px;
+	margin-right: 10px;
+}
+
+.mediaThumNail {
+	width: 300px;
+	height: 200px;
+	margin-right: 10px;
+}
+
+.mediaThumNail img{
+ 	width: 100%;
+ 	height: 100%;
+ 	object-fit: cover;
+ 	margin-bottom: 10px;
+}
+
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.4em;
+  max-height: 2.8em; /* 글자 크기에 따라 조정 필요할 수 있음 */
+}
+
+.goodsImg {
+	width: 235px;
+	height: 300px;
+	margin-right: 11px;
+}
+
+.goodsImg img{
+ 	width: 100%;
+ 	height: 100%;
+ 	object-fit: cover;
+ 	margin-bottom: 10px;
+}
+
+/* 그룹프로필에서 쓰이는 멤버 정보 카드 끝*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+

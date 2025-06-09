@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<input id="messageInput" type="text" placeholder="메시지를 입력하세요">
+<button onclick="sendMessage()">보내기</button>
+<ul id="messages"></ul>
+
+<script>
+    const socket = new SockJS("/ws/dmChat");
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+        stompClient.subscribe('/topic/public', (message) => {
+            const msg = JSON.parse(message.body);
+            const li = document.createElement('li');
+            li.innerText = msg.sender + ": " + msg.content;
+            document.getElementById('messages').appendChild(li);
+        });
+    });
+
+    function sendMessage() {
+        const content = document.getElementById('messageInput').value;
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({
+            sender: "사용자1",
+            content: content,
+            type: "CHAT"
+        }));
+    }
+</script>
+</body>
+</html>

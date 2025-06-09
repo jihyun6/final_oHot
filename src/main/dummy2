@@ -1,0 +1,40 @@
+	    WITH T AS (
+			SELECT ROW_NUMBER() OVER(ORDER BY REPORT_POST_NO) rnum,
+			R.REPORT_POST_NO AS reportPostNo,
+			R.REPORT_BOARD_NO AS reportBoardNo,
+			R.REPORT_TITLE AS reportTitle,
+			R.REPORT_CN AS reportCn,
+			R.REPORT_REG_DT AS reportRegDt,
+			R.REPORT_CNT AS reportCnt,
+			R.REPORT_TERMINATION AS reportTermination,
+			M.MEM_FIRST_NAME || ' ' || M.MEM_LAST_NAME AS memName,
+			R.MEM_NO AS memNo,
+			R.REPORT_DEL_YN AS reportDelYn,
+			R.CALLER_EMAIL AS callerEmail,
+			R.FILE_GROUP_NO AS fileGroupNo,
+			R.REPORT_RESULT AS reportResult,
+			R.REPORT_GUBUN AS reportGubun,
+			(SELECT E.MEM_FIRST_NAME || E.MEM_LAST_NAME FROM MEMBER E WHERE
+	          E.MEM_NO = (SELECT D.MEM_NO FROM COMMUNITY_POST D WHERE D.BOARD_NO =
+	          R.REPORT_BOARD_NO)) AS piMemName,
+	        (SELECT E.MEM_EMAIL FROM MEMBER E WHERE E.MEM_NO = (SELECT D.MEM_NO
+	          FROM COMMUNITY_POST D WHERE D.BOARD_NO = R.REPORT_BOARD_NO)) AS piMemEmail,
+	        M.MEM_NICKNM AS memNicknm,
+	        M.MEM_FIRST_NAME || ' ' || M.MEM_LAST_NAME AS fullName,
+			M.MEM_LAST_NAME AS memLastName,
+			M.MEM_FIRST_NAME AS memFirstName,
+			M.MEM_EMAIL AS memEmail,
+			M.MEM_TELNO AS memTelno,
+			M.MEM_BIRTH AS memBirth,
+			M.JOIN_YMD AS joinYmd,
+			M.SECSN_YMD AS secsnYmd,
+			M.MEM_ACCESS_TOKEN AS memAccessToken,
+			M.MEM_STAT_SEC_CODE_NO AS memStatSecCodeNo,
+			M.MEM_SEC_CODE_NO AS memSecCodeNo
+			FROM REPORT_BOARD_POST R
+			LEFT JOIN MEMBER M ON R.MEM_NO
+			= M.MEM_NO
+			WHERE R.REPORT_DEL_YN = 'N'
+		)
+		SELECT T.* FROM T
+        WHERE T.RNUM BETWEEN (#{currentPage} * #{size})-(#{size}-1) AND (#{currentPage} * #{size})

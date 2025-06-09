@@ -1,0 +1,895 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.community.mapper.CommunityMapper">
+	
+	<resultMap type="com.ohot.home.community.vo.CommunityReplyVO" id="ReplyMap">
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="replyNo" column="REPLY_NO"/>
+		<result property="replyContent" column="REPLY_CONTENT"/>
+		<result property="replyDelyn" column="REPLY_DELYN"/>
+		<result property="replyCreateDt" column="REPLY_CREATE_DT"/>
+		<result property="repCreateDate" column="REP_CREATE_DATE"/>
+		<result property="boardNo" column="BOARD_NO"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="mediaPostNo" column="MEDIA_POST_NO"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="replyLikeCnt" column="REPLY_LIKE_CNT"/>
+		<result property="profileFileNo" column="PROFILE_FILE_NO"/>
+		<result property="comAuth" column="COM_AUTH"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	
+	<resultMap type="com.ohot.home.community.vo.CommunityPostVO" id="BoardMap">
+		<result property="boardNo" column="BOARD_NO"/>
+		<result property="boardTitle" column="BOARD_TITLE"/>
+		<result property="boardContent" column="BOARD_CONTENT"/>
+		<result property="boardOnlyMembership" column="BOARD_ONLY_MEMBERSHIP"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="boardDelyn" column="BOARD_DELYN"/>
+		<result property="boardCreateDt" column="BOARD_CREATE_DT"/>
+		<result property="boardOnlyFan" column="BOARD_ONLY_FAN"/>
+		<result property="urlCategory" column="URL_CATEGORY"/>
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="boardCreateDate" column="BOARD_CREATE_DATE"/>
+		<result property="comAuth" column="COM_AUTH"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.home.community.vo.CommunityProfileVO" id="ProfileMap">
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="comFileGroupNo" column="COM_FILE_GROUP_NO"/>
+		<result property="comJoinYmd" column="COM_JOIN_YMD"/>
+		<result property="comDelyn" column="COM_DELYN"/>
+		<result property="comAuth" column="COM_AUTH"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="membershipYn" column="MEMBERSHIP_YN" />
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	<insert id="joinCommunity" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		<selectKey keyProperty="comProfileNo" resultType="int" order="BEFORE">
+			SELECT NVL(MAX(COM_PROFILE_NO),0)+1
+			FROM COMMUNITY_PROFILE
+		</selectKey>
+		INSERT INTO COMMUNITY_PROFILE (COM_PROFILE_NO, MEM_NO, COM_NM,
+		 <if test="fileGroupNo!=null and fileGroupNo!=''">
+		COM_FILE_GROUP_NO,
+		</if>
+		 <if test="fileGroupNo ==0">
+		COM_FILE_GROUP_NO,
+		</if>
+		COM_JOIN_YMD, COM_DELYN, COM_AUTH, ART_GROUP_NO)
+		VALUES (#{comProfileNo},#{memNo},#{comNm},
+		<if test="fileGroupNo!=null and fileGroupNo!=''">
+		#{fileGroupNo},
+		</if>
+		<if test="fileGroupNo ==0">
+		0,
+		</if>
+		TO_CHAR(SYSDATE,'YYYYMMDD'),'N','ROLE_MEM',#{artGroupNo})		
+	</insert>
+	
+	<!-- 
+	CommunityProfileVO(comProfileNo=18, memNo=0, comNm=null, comFileGroupNo=0, comJoinYmd=null, comDelyn=null
+	, comAuth=null, artGroupNo=0, profileFileNo=0, fileGroupNo=0, fileGroupVO=null, artistGroupVO=null, uploadFile=null)
+	 -->
+	<select id="profileDetail" parameterType="com.ohot.home.community.vo.CommunityProfileVO" resultMap="ProfileMap">
+ SELECT A.COM_PROFILE_NO, A.MEM_NO, A.COM_NM, A.COM_FILE_GROUP_NO AS FILE_GROUP_NO, A.COM_JOIN_YMD, A.COM_DELYN, A.COM_AUTH, A.ART_GROUP_NO,A.MEMBERSHIP_YN,
+      MAX(B.FILE_SN) AS FILE_SN
+      ,B.FILE_ORIGINAL_NAME, B.FILE_SAVE_NAME, B.FILE_SAVE_LOCATE, B.FILE_SIZE, B.FILE_EXT, B.FILE_MIME, B.FILE_FANCYSIZE, B.FILE_SAVE_DATE, B.FILE_DOWNCOUNT  
+      FROM PROFILE_FILE C
+      RIGHT JOIN COMMUNITY_PROFILE A ON (C.COM_PROFILE_NO = A.COM_PROFILE_NO)
+
+      LEFT JOIN FILE_DETAIL B ON (A.COM_FILE_GROUP_NO=B.FILE_GROUP_NO)
+
+      <if test="comAuth == 'ROLE_ART'">
+      LEFT OUTER JOIN (
+                 SELECT 
+                       file_sn
+                       , file_group_no
+                       , file_original_name
+                       , file_save_name
+                       , file_save_locate
+                       , file_size
+                       , file_ext
+                       , file_mime
+                       , file_fancysize
+                       , file_save_date
+                       , file_downcount
+                       , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+                   FROM file_detail
+          ) fd ON b.file_group_no = fd.file_group_no AND fd.RN = 1
+      </if>
+      WHERE 1=1
+           <if test="comProfileNo!=null and comProfileNo!=''">
+          AND A.COM_PROFILE_NO = #{comProfileNo}
+          </if>
+          <if test="comProfileNo==null or comProfileNo==''">
+          AND A.MEM_NO=#{memNo}
+          AND A.ART_GROUP_NO=#{artGroupNo}
+          </if>
+          AND A.COM_DELYN = 'N'
+      GROUP BY A.COM_PROFILE_NO, A.MEM_NO, A.COM_NM, A.COM_FILE_GROUP_NO, A.COM_JOIN_YMD, A.COM_DELYN,A.MEMBERSHIP_YN,
+       A.COM_AUTH, A.ART_GROUP_NO,B.FILE_ORIGINAL_NAME, B.FILE_SAVE_NAME, B.FILE_SAVE_LOCATE,
+        B.FILE_SIZE, B.FILE_EXT, B.FILE_MIME, B.FILE_FANCYSIZE, B.FILE_SAVE_DATE, B.FILE_DOWNCOUNT  
+
+	</select>
+	<select id="boardDetail" parameterType="com.ohot.home.community.vo.CommunityPostVO" resultMap="BoardMap" >
+		SELECT
+			    a.board_no,
+			    a.board_title,
+			    a.board_content,
+			    a.board_only_membership,
+			    a.file_group_no,
+			    a.board_delyn,
+			    a.board_create_dt,
+			    a.board_only_fan,
+			    a.url_category,
+			    a.com_profile_no,
+			    a.mem_no,
+			    b.file_save_locate,
+			    b.file_sn
+		  FROM
+			    community_post a
+			    LEFT JOIN file_detail    b ON a.file_group_no = b.file_group_no
+		 WHERE
+	    		board_no = #{boardNo}
+	</select>
+	
+	<update id="editProfileNm" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		UPDATE COMMUNITY_PROFILE
+		SET COM_NM = #{comNm}
+
+		   , COM_FILE_GROUP_NO = #{comFileGroupNo}
+
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+		  AND COM_DELYN = 'N'
+		
+	</update>
+	
+	<insert id="setFileProfile" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		<selectKey keyProperty="profileFileNo" resultType="int" order="BEFORE">
+			SELECT NVL(MAX(PROFILE_FILE_NO),0)+1
+			FROM PROFILE_FILE
+		</selectKey>
+		INSERT INTO PROFILE_FILE(PROFILE_FILE_NO, COM_PROFILE_NO, FILE_GROUP_NO)
+		VALUES (#{profileFileNo},#{comProfileNo},#{fileGroupNo})
+	</insert>
+	
+	<update id="deleteProfile" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		UPDATE COMMUNITY_PROFILE
+		SET COM_DELYN = 'Y'
+			,COM_NM = '탈퇴한 유저'
+			
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+	</update>
+	
+	<update id="deleteMyPost" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		UPDATE COMMUNITY_POST
+		SET BOARD_DELYN ='Y'
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+	</update>
+	
+	<update id="deleteMyReply" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		UPDATE COMMUNITY_REPLY
+		SET REPLY_DELYN='Y'
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+	
+	</update>
+	<update id="deleteMyFollow" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		UPDATE FOLLOW_DETAIL
+		SET DEL_YN='Y'
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+	</update>
+	<delete id="delYMyFollow" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		DELETE FROM FOLLOW_DETAIL
+		WHERE DEL_YN='Y'
+		AND COM_PROFILE_NO=#{comProfileNo}	
+	</delete>
+	<delete id="deleteMyLike">
+		DELETE FROM LIKE_DETAIL
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+	</delete>
+	
+	<update id="deleteBoard">
+        UPDATE COMMUNITY_POST
+        SET BOARD_DELYN = 'Y'
+        WHERE BOARD_NO = #{boardNo}
+	</update>
+	
+	<update id="deleteReply">
+        UPDATE COMMUNITY_REPLY
+        SET REPLY_DELYN = 'Y'
+        WHERE REPLY_NO = #{replyNo}
+	</update>
+	
+	
+	
+<select id="myPostList" parameterType="hashMap" resultMap="BoardMap">
+	SELECT S.*
+	FROM (
+		SELECT ROW_NUMBER() OVER(ORDER BY
+			<choose>
+				<when test="keyword == 'old'">
+					T.BOARD_CREATE_DATE ASC
+				</when>
+				<otherwise>
+					T.BOARD_CREATE_DATE DESC
+				</otherwise>
+			</choose>
+		) AS RRNUM,
+		T.*
+		FROM (
+			SELECT
+				a.board_no,
+				a.board_title,
+				a.board_content,
+				a.board_only_membership,
+				a.file_group_no,
+				d.file_save_locate,
+				a.board_delyn,
+				TO_CHAR(a.board_create_dt,'YYYY-MM-DD HH24:MI:SS') AS BOARD_CREATE_DATE,
+				a.board_create_dt,
+				a.board_only_fan,
+				a.url_category,
+				a.com_profile_no,
+				a.mem_no,
+				b.com_delyn,
+				b.com_auth,
+				ROW_NUMBER() OVER(ORDER BY A.BOARD_NO DESC) AS RNUM,
+				b.art_group_no,
+				b.com_nm
+			FROM
+				community_post a
+				JOIN community_profile b ON ( a.com_profile_no = b.com_profile_no )
+				LEFT OUTER JOIN file_group c ON ( a.file_group_no = c.file_group_no )
+				LEFT OUTER JOIN file_detail d ON ( c.file_group_no = d.file_group_no )
+			WHERE
+				A.BOARD_DELYN = 'N'
+				AND B.COM_DELYN = 'N'
+				AND B.COM_PROFILE_NO = #{comProfileNo}
+		) T
+	) S
+	WHERE S.RRNUM BETWEEN (#{currentPage} * 8) - (8 - 1) AND (#{currentPage} * 8)
+</select
+>
+<select id="myReplyList" parameterType="hashMap" resultType="com.ohot.home.community.vo.CommunityReplyVO">
+	SELECT *
+	FROM (
+		SELECT 
+			T.*,
+			ROW_NUMBER() OVER(
+				<choose>
+					<when test="keyword == 'old'">ORDER BY T.REPLY_NO ASC</when>
+					<otherwise>ORDER BY T.REPLY_NO DESC</otherwise>
+				</choose>
+			) AS RNUM
+		FROM (
+			SELECT 
+				A.REPLY_NO, 
+				A.REPLY_CONTENT, 
+				A.REPLY_DELYN,   
+				TO_CHAR(A.REPLY_CREATE_DT,'YYYY-MM-DD HH24:MI:SS') AS REP_CREATE_DATE,
+				A.BOARD_NO, A.ART_NO, A.MEM_NO, A.MEDIA_POST_NO,
+				A.COM_PROFILE_NO
+			FROM COMMUNITY_REPLY A
+			JOIN COMMUNITY_PROFILE B ON A.COM_PROFILE_NO = B.COM_PROFILE_NO
+			WHERE 
+				A.REPLY_DELYN = 'N'
+				AND B.COM_DELYN = 'N'
+				AND B.COM_PROFILE_NO = #{comProfileNo}
+		) T
+	) S
+	WHERE S.RNUM BETWEEN (#{currentPage} * 8) - (8 - 1) AND (#{currentPage} * 8)
+</select>
+	
+	<!-- 맵으로 받아야함 ( 수정 ) 
+	{artGroupNo=1, currentPage=1, keyword=}
+	-->
+	
+	<select id="fanBoardList" parameterType="hashMap" resultMap="BoardMap">
+		SELECT S.*
+		FROM
+		(
+		SELECT ROW_NUMBER() OVER(ORDER BY T.RNUM ASC) AS RRNUM
+				,T.*
+		FROM
+		(
+			SELECT
+			    a.board_no,
+			    a.board_title,
+			    a.board_content,
+			    a.board_only_membership,
+			    a.file_group_no,
+			    d.file_save_locate,
+			    a.board_delyn,
+			     TO_CHAR(a.board_create_dt,'YYYY-MM-DD HH24:MI:SS') AS BOARD_CREATE_DATE,
+			    a.board_only_fan,
+			    a.url_category,
+			    a.com_profile_no,
+			    a.mem_no,
+			    b.com_delyn,
+			    b.com_auth,
+			    ROW_NUMBER() OVER(ORDER BY A.BOARD_NO DESC) AS RNUM,
+			    b.art_group_no,
+			    b.com_nm
+			FROM
+			         community_post a
+			    JOIN community_profile b ON ( a.com_profile_no = b.com_profile_no )
+			    LEFT OUTER JOIN file_group        c ON ( a.file_group_no = c.file_group_no )
+			    LEFT OUTER JOIN file_detail       d ON ( c.file_group_no = d.file_group_no )
+			WHERE
+			    1 = 1
+			    <!-- 게시글 삭제여부 -->
+			    AND A.BOARD_DELYN = 'N'
+			    <!--커뮤니티 프로필 삭제여부 체크해야 함(삭제시 안보이게) -->
+			    AND B.COM_DELYN = 'N'
+			    <!-- 아티스트가 아니여야 함 -->
+			    AND B.COM_AUTH = 'ROLE_MEM'
+			    <!-- 어떤 아티스트그룹의 커뮤니티인지 -->
+			    AND B.ART_GROUP_NO = #{artGroupNo}
+			
+			    
+		)T
+	)S
+		WHERE S.RNUM BETWEEN (#{currentPage} * 8) -(8 - 1) AND (#{currentPage} * 8) 
+		
+	</select>
+	<select id="artistBoardList" parameterType="hashMap" resultMap="BoardMap">
+		SELECT S.*
+		FROM
+		(
+		SELECT ROW_NUMBER() OVER(ORDER BY T.RNUM ASC) AS RRNUM
+				,T.*
+		FROM
+		(
+			SELECT
+			    a.board_no,
+			    a.board_title,
+			    a.board_content,
+			    a.board_only_membership,
+			    a.file_group_no,
+			    d.file_save_locate,
+			    a.board_delyn,
+			     TO_CHAR(a.board_create_dt,'YYYY-MM-DD HH24:MI:SS') AS BOARD_CREATE_DATE,
+			    a.board_only_fan,
+			    a.url_category,
+			    a.com_profile_no,
+			    a.mem_no,
+			    b.com_delyn,
+			    b.com_auth,
+			    ROW_NUMBER() OVER(ORDER BY A.BOARD_NO DESC) AS RNUM,
+			    b.art_group_no,
+			    b.com_nm
+			FROM
+			         community_post a
+			    JOIN community_profile b ON ( a.com_profile_no = b.com_profile_no )
+			    LEFT OUTER JOIN file_group        c ON ( a.file_group_no = c.file_group_no )
+			    LEFT OUTER JOIN file_detail       d ON ( c.file_group_no = d.file_group_no )
+			WHERE
+			    1 = 1
+			    <!-- 게시글 삭제여부 -->
+			    AND A.BOARD_DELYN = 'N'
+			    <!--커뮤니티 프로필 삭제여부 체크해야 함(삭제시 안보이게) -->
+			    AND B.COM_DELYN = 'N'
+			    <!-- 아티스트가 아니여야 함 -->
+			    AND B.COM_AUTH = 'ROLE_ART'
+			    <!-- 어떤 아티스트그룹의 커뮤니티인지 -->
+			    AND B.ART_GROUP_NO = #{artGroupNo}
+			
+			    
+		)T
+	)S
+		WHERE S.RNUM BETWEEN (#{currentPage} * 8) -(8 - 1) AND (#{currentPage} * 8) 
+		
+	</select>
+
+	<select id="getTotalArtists" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+					FROM COMMUNITY_POST A
+			JOIN COMMUNITY_PROFILE B ON (A.COM_PROFILE_NO = B.COM_PROFILE_NO)
+            JOIN ARTIST C ON (B.MEM_NO = C.MEM_NO)
+			WHERE 1=1	    
+			    AND A.BOARD_DELYN = 'N'		
+			    AND B.COM_DELYN = 'N'
+			    AND B.COM_AUTH = 'ROLE_ART'
+	</select>
+	
+	<select id="getTotal" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+			FROM COMMUNITY_POST A
+			JOIN COMMUNITY_PROFILE B ON (A.COM_PROFILE_NO = B.COM_PROFILE_NO)
+			WHERE 1=1
+			    <!-- 게시글 삭제여부 -->
+			    AND A.BOARD_DELYN = 'N'
+			    <!--커뮤니티 프로필 삭제여부 체크해야 함(삭제시 안보이게) -->
+			    AND B.COM_DELYN = 'N'
+			    <!-- 아티스트가 아니여야 함 -->
+			    AND B.COM_AUTH = 'ROLE_MEM'
+
+	</select>
+	
+	<select id="getMyPostTotal" parameterType="hashMap" resultType="int">
+		    SELECT COUNT(*)
+			FROM COMMUNITY_POST A
+			JOIN COMMUNITY_PROFILE B ON (A.COM_PROFILE_NO = B.COM_PROFILE_NO)
+			WHERE 1=1
+			    
+			    AND A.BOARD_DELYN = 'N'
+			    
+			    AND B.COM_DELYN = 'N'
+		
+			    AND B.COM_AUTH = 'ROLE_MEM'
+                
+                AND B.COM_PROFILE_NO = #{comProfileNo}
+
+	</select>
+	<select id="getMyReplyTotal" parameterType="hashMap" resultType="int">
+         SELECT COUNT(*)
+			FROM COMMUNITY_REPLY A
+			JOIN COMMUNITY_PROFILE B ON (A.COM_PROFILE_NO = B.COM_PROFILE_NO)
+			WHERE 1=1
+			    
+			    AND A.REPLY_DELYN = 'N'
+			    
+			    AND B.COM_DELYN = 'N'
+		
+			    AND B.COM_AUTH = 'ROLE_MEM'
+                
+                AND B.COM_PROFILE_NO =#{comProfileNo}
+
+	</select>
+	
+	<select id="followingCnt" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		SELECT COUNT(FOLLOW_PROFILE_NO)
+		FROM FOLLOW_DETAIL
+		WHERE COM_PROFILE_NO = #{comProfileNo}
+	</select>
+	
+	<select id="followerCnt" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		SELECT COUNT(COM_PROFILE_NO)
+		FROM FOLLOW_DETAIL
+		WHERE FOLLOW_PROFILE_NO=#{comProfileNo}
+	</select>
+	
+	<select id="followingList" parameterType="com.ohot.home.community.vo.CommunityProfileVO" resultMap="ProfileMap">
+
+<!-- 		SELECT A.COM_PROFILE_NO, A.MEM_NO, A.COM_NM, A.COM_FILE_GROUP_NO, A.COM_JOIN_YMD, A.COM_DELYN, A.COM_AUTH, A.ART_GROUP_NO,D.FILE_SAVE_LOCATE
+		FROM COMMUNITY_PROFILE A
+		JOIN FOLLOW_DETAIL B ON (A.COM_PROFILE_NO = B.FOLLOW_PROFILE_NO)    
+        JOIN FILE_DETAIL D ON (A.COM_FILE_GROUP_NO = D.FILE_GROUP_NO)
+        LEFT OUTER JOIN (
+                 SELECT 
+                       file_sn
+                       , file_group_no
+                       , file_original_name
+                       , file_save_name
+                       , file_save_locate
+                       , file_size
+                       , file_ext
+                       , file_mime
+                       , file_fancysize
+                       , file_save_date
+                       , file_downcount
+                       , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+                   FROM file_detail
+          ) FD ON d.file_group_no = fd.file_group_no AND FD.RN = 1
+		WHERE B.COM_PROFILE_NO=#{comProfileNo}
+			AND A.COM_DELYN = 'N' -->
+		SELECT *
+		FROM COMMUNITY_PROFILE A
+		JOIN FOLLOW_DETAIL B ON (A.COM_PROFILE_NO = B.FOLLOW_PROFILE_NO)    
+
+        LEFT OUTER JOIN (
+                 SELECT 
+                       file_sn
+                       , file_group_no
+                       , file_original_name
+                       , file_save_name
+                       , file_save_locate
+                       , file_size
+                       , file_ext
+                       , file_mime
+                       , file_fancysize
+                       , file_save_date
+                       , file_downcount
+                       , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+                   FROM file_detail
+          ) FD ON a.com_file_group_no = fd.file_group_no AND FD.RN = 1
+		WHERE B.COM_PROFILE_NO=#{comProfileNo}
+			AND A.COM_DELYN = 'N'
+	</select>
+	<insert id="addReply" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+	<selectKey resultType="int" order="BEFORE" keyProperty="replyNo" >
+			SELECT NVL(MAX(REPLY_NO),0)+1
+			FROM COMMUNITY_REPLY
+	</selectKey>
+	INSERT INTO COMMUNITY_REPLY(REPLY_NO, REPLY_CONTENT, REPLY_DELYN, REPLY_CREATE_DT,
+							 BOARD_NO, ART_NO, MEM_NO, MEDIA_POST_NO, COM_PROFILE_NO,TK_NO,URL_CATEGORY)
+	VALUES(#{replyNo},#{replyContent},'N',SYSDATE,
+			#{boardNo},#{artNo},#{memNo},#{mediaPostNo},#{comProfileNo},#{tkNo},#{urlCategory})
+	</insert>
+	
+	<select id="getBaordNo" parameterType="com.ohot.home.community.vo.CommunityPostVO" resultType="int">
+	
+	SELECT MAX(BOARD_NO)
+	FROM COMMUNITY_POST
+	WHERE COM_PROFILE_NO = #{comProfileNo}
+	
+	</select>
+	
+	<!--밥먹고 와서 if문 걸기  -->
+	<insert id="addBoard" parameterType="com.ohot.home.community.vo.CommunityPostVO" >
+	<selectKey resultType="int" order="BEFORE" keyProperty="boardNo">
+			SELECT NVL(MAX(BOARD_NO),0)+1
+			FROM COMMUNITY_POST
+	</selectKey>
+		INSERT INTO COMMUNITY_POST(BOARD_NO, BOARD_TITLE, BOARD_CONTENT, 
+			<if test="boardOnlyMembership !=null and boardOnlyMembership !=''">
+			BOARD_ONLY_MEMBERSHIP,
+			</if>
+            <if test="fileGroupNo!=null and fileGroupNo!=''">
+            FILE_GROUP_NO, 
+            </if>
+            BOARD_DELYN,
+            BOARD_CREATE_DT, 
+            
+            BOARD_ONLY_FAN,
+
+            URL_CATEGORY, COM_PROFILE_NO, MEM_NO)
+		VALUES(
+		#{boardNo},#{boardTitle},#{boardContent}
+		<if test="boardOnlyMembership !=null and boardOnlyMembership !=''">
+		,#{boardOnlyMembership}
+		</if>
+		<if test="fileGroupNo!=null and fileGroupNo!=''">
+		,#{fileGroupNo}
+		</if>
+		,'N',SYSDATE
+		<if test="boardOnlyFan!=null and boardOnlyFan != ''">
+		,#{boardOnlyFan}
+		</if>
+		<if test="boardOnlyFan==null or boardOnlyFan == ''">
+		,'N'
+		</if>
+		,#{urlCategory},#{comProfileNo},#{memNo}
+		)
+	</insert>
+	<!-- 게시물 수정하기 -->
+	<update id="editBoard" parameterType="com.ohot.home.community.vo.CommunityPostVO">
+	UPDATE  COMMUNITY_POST <!--com.ohot.home.community.mapper.CommunityMapper.editBoard  -->
+	   SET  BOARD_TITLE= #{boardTitle},
+		    BOARD_CONTENT=#{boardContent},
+		    <if test="boardOnlyMembership !=null and boardOnlyMembership != ''">
+		    BOARD_ONLY_MEMBERSHIP=#{boardOnlyMembership},
+		    </if>		    
+		    <if test="boardOnlyFan !=null and boardOnlyMembership !=''">
+		    BOARD_ONLY_FAN=#{boardOnlyFan},
+		    </if>
+		    FILE_GROUP_NO=#{fileGroupNo}
+	WHERE   BOARD_NO=#{boardNo}
+	</update>
+	
+	<select id="replyList" parameterType="int" resultMap="ReplyMap">
+		SELECT A.REPLY_NO, A.REPLY_CONTENT, A.REPLY_DELYN,  TO_CHAR(a.reply_create_dt,'YYYY-MM-DD HH24:MI:SS') AS REP_CREATE_DATE, A.BOARD_NO, A.ART_NO, A.MEM_NO,A.MEDIA_POST_NO, A.COM_PROFILE_NO
+		, B.MEM_NO, B.COM_NM, B.COM_FILE_GROUP_NO, B.COM_JOIN_YMD, B.COM_DELYN, B.COM_AUTH, B.ART_GROUP_NO
+		, (SELECT MAX(C.FILE_SAVE_LOCATE) FROM FILE_DETAIL C WHERE C.FILE_GROUP_NO = B.COM_FILE_GROUP_NO) FILE_SAVE_LOCATE
+        FROM COMMUNITY_REPLY A
+        JOIN COMMUNITY_PROFILE B ON (A.COM_PROFILE_NO = B.COM_PROFILE_NO)
+		WHERE 1=1
+			AND	A.BOARD_NO = #{boardNo}
+			AND A.REPLY_DELYN = 'N'
+		ORDER BY A.REPLY_CREATE_DT DESC
+	</select>
+		
+	<select id="boardLikeList" parameterType="int">
+		SELECT C.MEM_NO
+		FROM COMMUNITY_POST A
+		JOIN LIKE_DETAIL B ON(A.BOARD_NO = B.BOARD_NO)
+        JOIN COMMUNITY_PROFILE C ON(B.COM_PROFILE_NO = C.COM_PROFILE_NO)
+		WHERE 1=1
+		 AND   A.BOARD_NO=#{boardNo}
+		 AND   B.REPLY_NO=0
+	</select> 
+	<select id="replyLikeList" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+        SELECT C.MEM_NO
+		FROM COMMUNITY_POST A
+		JOIN LIKE_DETAIL B ON(A.BOARD_NO = B.BOARD_NO)
+        JOIN COMMUNITY_PROFILE C ON(B.COM_PROFILE_NO = C.COM_PROFILE_NO)
+		WHERE 1=1
+		 AND   A.BOARD_NO=#{boardNo}
+		 AND   B.REPLY_NO=#{replyNo}
+	</select> 
+	<select id="boardLikeCnt" parameterType="int">
+		SELECT COUNT(B.LIKE_NO) AS BOARD_LIKE_CNT
+		FROM COMMUNITY_POST A
+		JOIN LIKE_DETAIL B ON(A.BOARD_NO = B.BOARD_NO)
+		WHERE 1=1
+		 AND   A.BOARD_NO=#{boardNo}
+		 AND   B.REPLY_NO=0
+	</select>
+	<select id="replyLikeCnt" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+		SELECT COUNT(B.LIKE_NO) AS REPLY_LIKE_CNT
+		FROM COMMUNITY_POST A
+		JOIN LIKE_DETAIL B ON(A.BOARD_NO = B.BOARD_NO)
+		WHERE 1=1
+		 AND   A.BOARD_NO=#{boardNo}
+		 AND   B.REPLY_NO=#{replyNo}
+	</select>
+	
+	<select id="artistRecentReplyList" parameterType="int" resultType="com.ohot.home.community.vo.CommunityReplyVO">
+		SELECT
+			     a.reply_no
+			    ,a.reply_content
+			    ,a.reply_delyn
+			    ,a.reply_create_dt
+			    ,a.board_no
+			    ,a.art_no
+			    ,a.mem_no
+			    ,a.media_post_no
+			    ,a.com_profile_no
+                ,d.com_nm
+                ,d.com_profile_no
+		FROM
+		        community_reply a
+		      JOIN artist b ON ( a.mem_no = b.mem_no )
+              JOIN COMMUNITY_POST C ON (A.BOARD_NO = C.BOARD_NO)
+              JOIN COMMUNITY_PROFILE D ON (a.mem_no = d.mem_no)
+		WHERE
+		    	b.art_group_no = #{artGroupNo}
+		    AND A.REPLY_DELYN = 'N'
+            AND C.BOARD_DELYN = 'N'
+		ORDER BY
+		        reply_create_dt DESC
+	</select>
+<!-- 	<select id="replyLikeList" parameterType="com.ohot.home.community.vo.CommunityReplyVO">
+		SELECT B.LIKE_NO AS REPLY_LIKE_CNT,B.COM_PROFILE_NO,B.BOARD_NO,B.REPLY_NO
+		FROM COMMUNITY_POST A
+		JOIN LIKE_DETAIL B ON(A.BOARD_NO = B.BOARD_NO)
+		WHERE 1=1
+		 AND   A.BOARD_NO=#{boardNo}
+		 AND   B.REPLY_NO=#{replyNo}
+	</select>
+	<select id="boardLikeList" parameterType="int" resultType="com.ohot.home.community.vo.LikeDetailVO">
+		SELECT B.LIKE_NO AS REPLY_LIKE_CNT,B.COM_PROFILE_NO,B.BOARD_NO,B.REPLY_NO
+		FROM COMMUNITY_POST A
+		JOIN LIKE_DETAIL B ON(A.BOARD_NO = B.BOARD_NO)
+		WHERE 1=1
+		 AND   A.BOARD_NO=#{boardNo}
+		 AND   B.REPLY_NO=0
+	</select> -->
+	<!-- 팔로우 yn merge문 -->
+	<update id="followYn" >
+
+	MERGE INTO FOLLOW_DETAIL LD
+    USING (SELECT #{comProfileNo} AS COM_PROFILE_NO, #{followProfileNo} AS FOLLOW_PROFILE_NO FROM DUAL) T
+    ON (LD.COM_PROFILE_NO = T.COM_PROFILE_NO AND LD.FOLLOW_PROFILE_NO = T.FOLLOW_PROFILE_NO)
+    WHEN MATCHED THEN
+    UPDATE SET LD.DEL_YN = 'Y'
+    WHEN NOT MATCHED THEN
+
+    INSERT (COM_PROFILE_NO, FOLLOW_PROFILE_NO) 
+    VALUES (T.COM_PROFILE_NO, T.FOLLOW_PROFILE_NO) 
+    
+	</update>
+	<delete id="followDelete">
+	  DELETE FROM FOLLOW_DETAIL
+      WHERE COM_PROFILE_NO = #{comProfileNo}
+      AND FOLLOW_PROFILE_NO = #{followProfileNo}
+      AND DEL_YN = 'Y'
+	</delete>
+	<update id="boardLikeYn" parameterType="com.ohot.home.community.vo.LikeDetailVO" >
+	MERGE INTO LIKE_DETAIL LD
+    USING (SELECT #{comProfileNo} AS COM_PROFILE_NO, #{boardNo} AS BOARD_NO FROM DUAL) T
+    ON (LD.COM_PROFILE_NO = T.COM_PROFILE_NO AND LD.BOARD_NO = T.BOARD_NO)
+    WHEN MATCHED THEN
+    UPDATE SET LD.DEL_YN = 'Y'
+    WHEN NOT MATCHED THEN
+    <selectKey resultType="int" order="BEFORE" keyProperty="likeNo" >
+			SELECT NVL(MAX(LIKE_NO),0)+1
+			FROM LIKE_DETAIL
+	</selectKey>
+        INSERT (LIKE_NO,COM_PROFILE_NO, BOARD_NO) 
+        VALUES (#{likeNo},T.COM_PROFILE_NO, T.BOARD_NO)
+    
+	</update>
+	<delete id="boardLikeDelete" parameterType="com.ohot.home.community.vo.LikeDetailVO">
+	DELETE 
+    FROM LIKE_DETAIL
+    WHERE COM_PROFILE_NO = #{comProfileNo}
+      AND BOARD_NO = #{boardNo}
+      AND DEL_YN = 'Y'
+	</delete>
+	<update id="replyLikeYn" parameterType="com.ohot.home.community.vo.LikeDetailVO" >
+	MERGE INTO LIKE_DETAIL LD
+    USING (SELECT #{comProfileNo} AS COM_PROFILE_NO, #{boardNo} AS BOARD_NO,#{replyNo} AS REPLY_NO FROM DUAL) T
+    ON (LD.COM_PROFILE_NO = T.COM_PROFILE_NO AND LD.BOARD_NO = T.BOARD_NO AND LD.REPLY_NO = T.REPLY_NO)
+    WHEN MATCHED THEN
+    UPDATE SET LD.DEL_YN = 'Y'
+    WHEN NOT MATCHED THEN
+    <selectKey resultType="int" order="BEFORE" keyProperty="likeNo" >
+			SELECT NVL(MAX(LIKE_NO),0)+1
+			FROM LIKE_DETAIL
+	</selectKey>
+        INSERT (LIKE_NO,COM_PROFILE_NO, BOARD_NO,REPLY_NO) 
+        VALUES (#{likeNo},T.COM_PROFILE_NO,T.BOARD_NO ,T.REPLY_NO)
+    
+	</update>
+	<delete id="replyLikeDelete" parameterType="com.ohot.home.community.vo.LikeDetailVO">
+	DELETE 
+    FROM LIKE_DETAIL
+    WHERE COM_PROFILE_NO = #{comProfileNo}
+      AND BOARD_NO = #{boardNo}
+      AND REPLY_NO = #{replyNo}
+      AND DEL_YN = 'Y'
+	</delete>
+	
+	<insert id="artJoinCommunity" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		<selectKey keyProperty="comProfileNo" resultType="int" order="BEFORE">
+			SELECT NVL(MAX(COM_PROFILE_NO),0)+1
+			  FROM COMMUNITY_PROFILE
+		</selectKey>
+		INSERT INTO COMMUNITY_PROFILE (
+				COM_PROFILE_NO
+				, MEM_NO
+				, COM_NM
+		 		<if test="fileGroupNo!=null and fileGroupNo!=''">
+				, COM_FILE_GROUP_NO
+				</if>
+				, COM_JOIN_YMD
+				, COM_DELYN
+				, COM_AUTH
+				, ART_GROUP_NO)
+		VALUES (
+				#{comProfileNo}
+				,#{memNo}
+				,#{comNm}
+				<if test="fileGroupNo!=null and fileGroupNo!=''">
+				, #{fileGroupNo}
+				</if>
+				, TO_CHAR(SYSDATE,'YYYYMMDD')
+				,'N'
+				,'ROLE_ART'
+				,#{artGroupNo})		
+	</insert>
+
+	
+	<delete id="deleteArtCommunity" parameterType="com.ohot.vo.ArtistVO">
+	  DELETE FROM COMMUNITY_PROFILE
+       WHERE MEM_NO = #{memNo}
+	</delete>
+	
+	<!-- <update id="deleteArtCommunity" parameterType="com.ohot.vo.ArtistVO">
+		UPDATE COMMUNITY_PROFILE
+		   SET COM_DELYN = 'Y'
+		 WHERE MEM_NO = #{memNo} 
+	</update> -->
+	
+	<select id="membershipYn" resultType="String" parameterType="int">
+    SELECT 	
+        NVL((
+            SELECT 
+                CASE
+                    WHEN A.EXP_YMD - A.START_YMD &lt;= 0 THEN 'N'
+                    ELSE 'Y'
+                END
+            FROM MEMBERSHIP A
+            JOIN COMMUNITY_PROFILE B ON (A.COM_PROFILE_NO = B.COM_PROFILE_NO)
+            RIGHT JOIN ARTIST_GROUP C ON (B.ART_GROUP_NO = C.ART_GROUP_NO)
+            WHERE A.COM_PROFILE_NO = #{comProfileNo}
+            AND C.ART_GROUP_DEL_YN = 'N'
+            AND EXP_YMD > SYSDATE
+        ), 'N')
+    FROM DUAL
+	</select>
+	
+	<select id="artistSchduleVOList" parameterType="com.ohot.home.community.vo.ArtistScheduleVO" resultType="com.ohot.home.community.vo.ArtistScheduleVO">
+		SELECT
+		    t.art_act_nm,
+		    c.start_date,
+		    c.end_date,
+		    c.description,
+		    t.art_group_nm,
+		    c.schedule_no,
+		    t.art_group_no
+		FROM
+		    (
+		        SELECT
+		            b.art_group_nm,
+		            a.art_group_no,
+		            a.art_act_nm
+		        FROM
+		            artist       a
+		            LEFT JOIN artist_group b ON ( a.art_group_no = b.art_group_no )
+		        WHERE
+		                a.art_group_no = 1
+		            AND b.art_group_del_yn = 'N'
+		            AND a.art_del_yn = 'N'
+		    )               t
+		    LEFT JOIN artist_schedule c ON t.art_act_nm = c.art_act_nm
+	</select>
+	
+	<insert id="addSchedule" parameterType="com.ohot.home.community.vo.ArtistScheduleVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="scheduleNo">
+			SELECT NVL(MAX(SCHEDULE_NO),0)+1
+			  FROM ARTIST_SCHEDULE
+		</selectKey>
+		INSERT
+		    INTO artist_schedule (
+		        art_act_nm
+		        ,start_date
+		        ,end_date
+		        ,description
+		        ,art_group_nm
+		        ,schedule_no
+		        ,art_group_no
+		    )
+		VALUES (#{artActNm},#{startDate},#{endDate},#{description},#{artGroupNm},#{scheduleNo},#{artGroupNo} )
+	</insert>
+	
+	<insert id="setSetting" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+		INSERT INTO NOTI_STNG(COM_PROFILE_NO, MEM_NO, BD_STNG_YN, LP_STNG_YN, LV_STNG_YN, LK_STNG_YN, ME_STNG_YN,ART_GROUP_NO)
+		VALUES (#{comProfileNo},#{memNo},'Y','Y','Y','Y','Y',#{artGroupNo})
+	</insert>
+	
+	<select id="getArtBirth" parameterType="int" resultType="com.ohot.home.community.vo.ArtistBirthVO">
+			
+		SELECT<!--com.ohot.home.community.mapper.CommunityMapper.getArtBirth  -->
+		     a.mem_birth
+		    ,a.mem_no
+		    ,b.art_no
+		    ,b.art_group_no
+		    ,b.art_act_nm
+		FROM
+		    member a
+		    RIGHT JOIN artist b ON ( a.mem_no = b.mem_no )
+		WHERE
+		        b.art_group_no = #{artGroupNo}
+		    AND b.art_del_yn = 'N'
+		
+	</select>
+	
+	<select id="myCommunity" parameterType="int" resultType="com.ohot.home.community.vo.MyCommuntiyVO" >
+		SELECT B.ART_GROUP_NM,B.ART_GROUP_NO
+		FROM COMMUNITY_PROFILE A
+		JOIN ARTIST_GROUP B ON ( A.ART_GROUP_NO = B.ART_GROUP_NO)
+		WHERE 1=1
+		AND A.MEM_NO = #{memNo}
+		AND A.COM_DELYN='N'
+		AND B.ART_GROUP_DEL_YN = 'N'
+	</select>
+	
+	<delete id="fileSnDel">
+	DELETE FROM FILE_DETAIL
+		WHERE FILE_GROUP_NO = #{fileGroupNo}
+		AND FILE_SN = #{sn} 
+	
+	</delete>
+	
+</mapper>

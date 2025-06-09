@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.4.4</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.ohot</groupId>
+	<artifactId>ohot</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>ohot</name>
+	<description>Demo project for Spring Boot</description>
+	<url />
+	<licenses>
+		<license />
+	</licenses>
+	<developers>
+		<developer />
+	</developers>
+	<scm>
+		<connection />
+		<developerConnection />
+		<tag />
+		<url />
+	</scm>
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>3.0.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.database.jdbc</groupId>
+			<artifactId>ojdbc11</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter-test</artifactId>
+			<version>3.0.4</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- POI -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>4.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>4.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml-schemas</artifactId>
+			<version>4.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlbeans</groupId>
+			<artifactId>xmlbeans</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<!-- POI 끝-->
+		<!-- commons file 파일처리 추가 유틸-->
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
+		</dependency>
+		<!--commons file 파일처리 추가 유틸 끝-->
+		<!--fullcalendar -->
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>fullcalendar</artifactId>
+			<version>6.1.15</version>
+		</dependency>
+		<!--풀캘린더 끝-->
+
+		<!-- jstl을 boot3에서 사용하기 위한 라이브러리 -->
+		<dependency>
+			<groupId>jakarta.servlet.jsp.jstl</groupId>
+			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.glassfish.web</groupId>
+			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
+		</dependency>
+		<!-- jsp, 스프링부트 파싱-->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+		</dependency>
+
+		<!-- 파일업로드 시작  -->
+		<!-- 썸네일 -->
+		<!-- https://mvnrepository.com/artifact/org.imgscalr/imgscalr-lib -->
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>4.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/net.coobird/thumbnailator -->
+		<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.8</version>
+		</dependency>
+		<!-- 파일업로드 끝  -->
+		
+		<!--CKEditor 이미지 업로드 시 필요-->
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-test</artifactId>
+		</dependency>
+		
+
+
+		<!-- 입력값을 검증하기 위한 라이브러리 의존 관계 정의 시작
+		스프링
+		M(Model) : Service, ServiceImple, Mapper
+		V(View) : JSP
+		C(Controller) : Controller
+		Bean(자바빈 클래스, ArticleVO) Validation(유효성검사) 기능을 이용해
+		요청 파라미터 값이 바인딩된(멤버변수에 세팅된) 도메인 클래스(ArticleVO)의 입력값 검증을 함
+		요청 파라미터 : ?articleNo=112&title=개똥이
+		public String write(골뱅이ModelAttribute ArticleVO articleVO)
+		-->
+		<!--
+		https://mvnrepository.com/artifact/org.hibernate/hibernate-validator -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>5.2.5.Final</version>
+		</dependency>
+		<!-- 입력값을 검증하기 위한 라이브러리 의존 관계 정의 끝 -->
+
+		<!-- 스프링 시큐리티 시작-->
+		<!--1. 스프링 시큐리티를 사용하기 위한 스타터 추가
+      build.gradle에서는 implementation 'org.springframework.boot:spring-boot-starter-security'
+      -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<!--3. 스프링 시큐리티를 사용하기 위한 스타터 추가
+      build.gradle에서는 implementation 'org.springframework.boot:spring-boot-starter-security'
+      -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+		</dependency>
+
+		<!-- 스프링 시큐리티 일반 기능 -->
+		<!--
+		https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+		</dependency>
+
+		<!-- 스프링 시큐리티와 태그라이브러리를 연결해줌 -->
+		<!--
+		https://mvnrepository.com/artifact/org.springframework.security/spring-security-taglibs -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-taglibs</artifactId>
+		</dependency>
+		<!-- 스프링 시큐리티 끝 -->
+
+		<!-- json 관련 추가 -->
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<!-- json 관련 추가 -->
+
+		<!-- oauth2 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+
+		<!-- google Cloud Translation API -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
+
+		<!-- json 추가 -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20231013</version>
+		</dependency>
+		
+		<dependency>
+	        <groupId>io.livekit</groupId>
+	        <artifactId>livekit-server</artifactId>
+	        <version>0.9.0</version>
+    	</dependency>
+    	
+    	<!--스포티파이-->
+    	<dependency>
+		  <groupId>se.michaelthelin.spotify</groupId>
+		  <artifactId>spotify-web-api-java</artifactId>
+		  <version>8.1.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

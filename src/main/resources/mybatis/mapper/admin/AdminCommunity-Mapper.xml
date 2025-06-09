@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.admin.mapper.AdminCommunityMapper">
+
+	<resultMap type="com.ohot.vo.AdminCommunityPostVO" id="BoardMap">
+		<result property="boardNo" column="BOARD_NO"/>
+		<result property="boardTitle" column="BOARD_TITLE"/>
+		<result property="boardContent" column="BOARD_CONTENT"/>
+		<result property="boardOnlyMembership" column="BOARD_ONLY_MEMBERSHIP"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="boardDelyn" column="BOARD_DELYN"/>
+		<result property="boardCreateDt" column="BOARD_CREATE_DT"/>
+		<result property="boardOnlyFan" column="BOARD_ONLY_FAN"/>
+		<result property="urlCategory" column="URL_CATEGORY"/>
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="boardCreateDate" column="BOARD_CREATE_DATE"/>
+		<result property="comAuth" column="COM_AUTH"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+
+<select id="getTotalPost" resultType="int" parameterType="hashMap">
+    SELECT COUNT(BOARD_NO)
+    FROM COMMUNITY_POST
+    WHERE 1=1
+    <if test="boardTitle != null and boardTitle != ''">
+       AND BOARD_TITLE LIKE '%' || #{boardTitle} || '%'
+    </if>
+    <if test="boardContent != null and boardContent != ''">
+       AND BOARD_CONTENT LIKE '%' || #{boardContent} || '%'
+    </if>
+    <if test="boardOnlyMembership != null and boardOnlyMembership != ''">
+       AND BOARD_ONLY_MEMBERSHIP = #{boardOnlyMembership}
+    </if>
+    <if test="boardDelyn != null and boardDelyn != ''">
+       AND BOARD_DELYN = #{boardDelyn}
+    </if>
+	<if test="boardCreateDate != null and boardCreateDate != ''">
+		  AND TRUNC(BOARD_CREATE_DT) = #{boardCreateDate}
+	</if>
+    <if test="boardOnlyFan != null and boardOnlyFan != ''">
+       AND BOARD_ONLY_FAN = #{boardOnlyFan}
+    </if>
+    <if test="urlCategory != null and urlCategory != ''">
+       AND URL_CATEGORY = #{urlCategory}
+    </if>
+    <if test="memNo != null and memNo != ''">
+    	AND MEM_NO = #{memNo}
+    </if>
+</select>
+
+<select id="adminPostList" resultType="com.ohot.vo.AdminCommunityPostVO" parameterType="hashMap" >
+	
+SELECT * FROM
+(
+    SELECT
+        ROWNUM AS RNUM
+        ,COUNT(1) OVER() AS total_cnt
+        ,A.*
+    FROM(
+        SELECT g.BOARD_NO, g.BOARD_TITLE, g.BOARD_CONTENT, g.BOARD_ONLY_MEMBERSHIP, g.FILE_GROUP_NO, g.BOARD_DELYN,
+        
+        TO_CHAR(g.BOARD_CREATE_DT,'YYYY-MM-DD') AS BOARD_CREATE_DATE,
+        TO_CHAR(g.board_create_dt,'YYYY-MM-DD HH24:MI:SS') AS BOARD_CREATE_DT2
+        
+        , g.BOARD_ONLY_FAN, g.URL_CATEGORY, g.COM_PROFILE_NO, g.MEM_NO
+        FROM COMMUNITY_POST g
+        WHERE 1=1
+	    <if test="boardTitle != null and boardTitle != ''">
+	       AND g.BOARD_TITLE LIKE '%' || #{boardTitle} || '%'
+	    </if>
+	    <if test="boardContent != null and boardContent != ''">
+	       AND g.BOARD_CONTENT LIKE '%' || #{boardContent} || '%'
+	    </if>
+	    <if test="boardOnlyMembership != null and boardOnlyMembership != ''">
+	       AND g.BOARD_ONLY_MEMBERSHIP = #{boardOnlyMembership}
+	    </if>
+	    <if test="boardDelyn != null and boardDelyn != ''">
+	       AND g.BOARD_DELYN = #{boardDelyn}
+	    </if>
+	    <if test="boardCreateDate != null and boardCreateDate != ''">
+		   AND TRUNC(g.BOARD_CREATE_DT) = #{boardCreateDate}
+	    </if>
+	    <if test="boardOnlyFan != null and boardOnlyFan != ''">
+	       AND g.BOARD_ONLY_FAN = #{boardOnlyFan}
+	    </if>
+	    <if test="urlCategory != null and urlCategory != ''">
+	       AND g.URL_CATEGORY = #{urlCategory}
+	    </if>
+	    <if test="memNo != null and memNo != ''">
+	    	AND g.MEM_NO = #{memNo}
+	    </if>
+        
+        ORDER BY g.BOARD_NO DESC) A
+        )
+        WHERE RNUM &gt;= #{startRow} AND RNUM &lt;= #{endRow}
+</select>
+
+<select id="adminReplyList" resultType="com.ohot.vo.AdminCommunityReplyVO" parameterType="hashMap">
+SELECT * FROM
+(
+    SELECT
+        ROWNUM AS RNUM
+        ,COUNT(1) OVER() AS total_cnt
+        ,A.*
+    FROM(
+		SELECT G.REPLY_NO, G.REPLY_CONTENT, G.REPLY_DELYN, G.REPLY_CREATE_DT, G.BOARD_NO, G.ART_NO, G.MEM_NO, G.MEDIA_POST_NO, G.COM_PROFILE_NO, G.TK_NO, G.URL_CATEGORY,
+		
+		TO_CHAR(g.REPLY_CREATE_DT,'YYYY-MM-DD') AS REPLY_CREATE_DATE,
+		TO_CHAR(g.REPLY_create_dt,'YYYY-MM-DD HH24:MI:SS') AS REPLY_CREATE_DT2
+		
+		FROM COMMUNITY_REPLY g
+		WHERE 1=1
+			<if test="category == 'tkY'">
+				AND g.TK_NO LIKE '%'
+  				AND g.TK_NO !=0
+			</if>
+		    <if test="category == 'mediaY'">
+		    	AND G.MEDIA_POST_NO LIKE '%'
+ 				AND G.MEDIA_POST_NO != 0
+		    </if>
+		    <if test="category == 'boardY'">
+		    	AND g.board_NO LIKE '%'
+  				AND g.board_NO !=0
+		    </if>
+			<if test="urlCategory != null and urlCategory != ''">
+				AND g.URL_CATEGORY = #{urlCategory}
+			</if>
+		    <if test="replyCreateDate != null and replyCreateDate != ''">
+			   AND TRUNC(g.REPLY_CREATE_DT) = #{replyCreateDate}
+		    </if>
+			<if test="replyContent != null and replyContent != ''">
+				AND G.REPLY_CONTENT LIKE '%' || #{replyContent} || '%'	
+			</if>
+			<if test="replyDelyn != null and replyDelyn != ''">
+				AND G.REPLY_DELYN = #{replyDelyn}
+			</if>
+			<if test="replyNo != null and replyNo != ''">
+				AND G.REPLY_NO = #{replyNo}
+			</if>
+			<if test="boardNo != null and boardNo != '' ">
+				AND G.BOARD_NO = #{boardNo}
+			</if>
+			<if test="tkNo != null and tkNo != ''">
+				AND G.TK_NO = #{tkNo}
+			</if>
+			<if test="mediaPostNo != null and mediaPostNo != '' ">
+				AND G.MEDIA_POST_NO = #{mediaPostNo}
+			</if>
+			<if test="memNo != null and memNo != '' ">
+				AND G.MEM_NO = #{memNo}
+			</if>
+		  ORDER BY g.REPLY_NO DESC) A
+        )
+        WHERE RNUM &gt;= #{startRow} AND RNUM &lt;= #{endRow}
+
+</select>
+
+<select id="getTotalReply" resultType="int" parameterType="hashMap">
+	    SELECT COUNT(reply_NO)
+	    FROM COMMUNITY_REPLY
+	    WHERE 1=1
+			<if test="category == 'tkY'">
+				AND TK_NO LIKE '%'
+  				AND TK_NO !=0
+			</if>
+		    <if test="category == 'mediaY'">
+		    	AND MEDIA_POST_NO LIKE '%'
+ 				AND MEDIA_POST_NO != 0
+		    </if>
+		    <if test="category == 'boardY'">
+		    	AND board_NO LIKE '%'
+  				AND board_NO !=0
+		    </if>
+			<if test="urlCategory != null and urlCategory != ''">
+				AND URL_CATEGORY = #{urlCategory}
+			</if>
+		    <if test="replyCreateDate != null and replyCreateDate != ''">
+			   AND TRUNC(REPLY_CREATE_DT) = #{replyCreateDate}
+		    </if>
+			<if test="replyContent != null and replyContent != ''">
+				AND REPLY_CONTENT LIKE '%' || #{replyContent} || '%'	
+			</if>
+			<if test="replyDelyn != null and replyDelyn != ''">
+				AND REPLY_DELYN = #{replyDelyn}
+			</if>
+			<if test="replyNo != null and replyNo != ''">
+				AND REPLY_NO = #{replyNo}
+			</if>
+			<if test="boardNo != null and boardNo != '' ">
+				AND BOARD_NO = #{boardNo}
+			</if>
+			<if test="tkNo != null and tkNo != ''">
+				AND TK_NO = #{tkNo}
+			</if>
+			<if test="mediaPostNo != null and mediaPostNo != '' ">
+				AND MEDIA_POST_NO = #{mediaPostNo}
+			</if>
+			<if test="memNo != null and memNo != '' ">
+				AND MEM_NO = #{memNo}
+			</if>
+</select>
+
+<select id="postDetail" parameterType="int" resultMap="BoardMap">
+	SELECT
+	    a.board_no
+	    ,a.board_title
+	    ,a.board_content
+	    ,a.board_only_membership
+	    ,a.file_group_no
+	    ,a.board_delyn
+    	,to_char(a.board_create_dt,'yyyy-mm-dd hh24:mm:ss') as board_create_date
+	    ,a.board_only_fan
+	    ,a.url_category
+	    ,a.com_profile_no
+	    ,a.mem_no
+	    ,c.file_original_name
+	    ,c.file_sn
+	    ,c.file_save_date
+	    ,c.file_save_locate
+	    ,c.file_save_name
+	    ,c.file_downcount
+	    ,c.file_ext
+	    ,c.file_fancysize
+	    ,c.file_mime
+	    ,c.file_size
+	    ,d.com_nm
+	FROM
+	    community_post a
+	    LEFT JOIN file_group     b ON ( a.file_group_no = b.file_group_no )
+	    LEFT JOIN file_detail    c ON ( b.file_group_no = c.file_group_no )
+	    JOIN community_profile d on (a.com_profile_no = d.com_profile_no)
+	WHERE
+	    a.board_no = #{boardNo}
+</select>
+
+<update id="postDelete">
+	UPDATE COMMUNITY_POST
+	SET BOARD_DELYN = 'Y'
+	WHERE BOARD_NO = #{boardNo}
+</update>
+<update id="postUnDelete">
+	UPDATE COMMUNITY_POST
+	SET BOARD_DELYN = 'N'
+	WHERE BOARD_NO = #{boardNo}
+</update>
+<update id="replyDelete">
+	UPDATE COMMUNITY_REPLY
+	SET REPLY_DELYN = 'Y'
+	WHERE REPLY_NO = #{boardNo}
+</update>
+<update id="replyUnDelete">
+	UPDATE COMMUNITY_REPLY
+	SET REPLY_DELYN = 'N'
+	WHERE REPLY_NO = #{boardNo}
+</update>
+
+<select id="allPostList">
+	SELECT BOARD_NO, BOARD_TITLE, BOARD_CONTENT, BOARD_ONLY_MEMBERSHIP, FILE_GROUP_NO, BOARD_DELYN, TO_CHAR(BOARD_CREATE_DT,'YYYY-MM-DD') AS BOARD_CREATE_DATE, BOARD_ONLY_FAN, URL_CATEGORY, COM_PROFILE_NO, MEM_NO
+	FROM COMMUNITY_POST
+	ORDER BY BOARD_NO DESC
+</select>
+
+<select id="allReplyList">
+	SELECT REPLY_NO, REPLY_CONTENT, REPLY_DELYN, TO_CHAR(REPLY_CREATE_DT,'YYYY-MM-DD') AS REPLY_CREATE_DATE, BOARD_NO, ART_NO, MEM_NO, MEDIA_POST_NO, COM_PROFILE_NO, TK_NO, URL_CATEGORY,ROWNUM AS RNUM
+	FROM COMMUNITY_REPLY
+	ORDER BY REPLY_NO DESC
+</select>
+
+</mapper>

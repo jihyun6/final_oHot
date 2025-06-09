@@ -1,0 +1,1317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.employee.mapper.EmployeeMapper">
+
+	<resultMap type="com.ohot.vo.EmployeeVO" id="employeeMap">
+		<result property="enabled" column="ENABLED"/>
+		<result property="snsEmpYn" column="SNS_EMP_YN"/>
+		<result property="empNo" column="EMP_NO"/>
+		<result property="empPswd" column="EMP_PSWD"/>
+		<result property="empNm" column="EMP_NM"/>
+		<result property="empRrno" column="EMP_RRNO"/>
+		<result property="empBrdt" column="EMP_BRDT"/>
+		<result property="empTelno" column="EMP_TELNO"/>
+		<result property="empEmlAddr" column="EMP_EML_ADDR"/>
+		<result property="jncmpYmd" column="JNCMP_YMD"/>
+		<result property="rsgntnYmd" column="RSGNTN_YMD"/>
+		<result property="empZip" column="EMP_ZIP"/>
+		<result property="empAddr" column="EMP_ADDR"/>
+		<result property="empDaddr" column="EMP_DADDR"/>
+		<result property="offcsPhoto" column="OFFCS_PHOTO"/>
+		<result property="jbgdCd" column="JBGD_CD"/>
+		<result property="sexdtnCd" column="SEXDTN_CD"/>
+		<result property="deptNo" column="DEPT_NO"/>
+		<result property="empStngYn" column="EMP_STNG_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="stampFileGroupNo" column="STAMP_FILE_GROUP_NO"/>
+		<result property="position" column="POSITION" />
+		<result property="profileSaveLocate" column="PROFILE_SAVE_LOCATE" />
+		<collection property="atrzDocVOList" resultMap="atrzDocMap"></collection>
+		<collection property="atrzLineVOList" resultMap="atrzLineMap"></collection>
+		<collection property="atrzRefVOList" resultMap="atrzRefMap"></collection>
+	</resultMap>
+
+	<resultMap type="com.ohot.employee.vo.DepartmentVO" id="departmentMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="deptNo" column="DEPT_NO"/>
+		<result property="deptNm" column="DEPT_NM"/>
+		<result property="upDept" column="UP_DEPT"/>
+		<result property="deptSn" column="DEPT_SN"/>
+		<result property="crtYmd" column="CRT_YMD"/>
+		<result property="totalCnt" column="TOTAL_CNT"/>
+		<collection property="employeeVOList" resultMap="employeeMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.employee.vo.AtrzDocVO" id="atrzDocMap">
+		<result property="atrzDocNo" column="ATRZ_DOC_NO"/>
+		<result property="docFmNo" column="DOC_FM_NO"/>
+		<result property="drftTtl" column="DRFT_TTL"/>
+		<result property="drftCn" column="DRFT_CN"/>
+		<result property="emrgYn" column="EMRG_YN"/>
+		<result property="drftYmd" column="DRFT_YMD"/>
+		<result property="ddlnYmd" column="DDLN_YMD"/>
+		<result property="drftEmpNo" column="DRFT_EMP_NO"/>
+		<result property="offcsPhoto" column="OFFCS_PHOTO"/>
+		<result property="drftJbgdCd" column="DRFT_JBGD_CD"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="drftStampFileGroupNo" column="DRFT_STAMP_FILE_GROUP_NO"/>
+		<result property="atrzSttsCd" column="ATRZ_STTS_CD"/>
+		<result property="atrzLnSttsCd" column="ATRZ_LN_STTS_CD"/>
+		<result property="drftStampFileSaveLocate" column="DRFT_STAMP_FILE_SAVE_LOCATE"/>
+		<result property="drftDt" column="DRFT_DT"/>
+		<result property="docFrmNm" column="DOC_FRM_NM"/>
+		<association property="approvedConcertPlanVO" resultMap="approvedConcertPlanMap"></association>
+		<association property="approvedConversionRequestVO" resultMap="approvedConcertPlanMap"></association>
+		<collection property="atrzRefVOList" resultMap="atrzRefMap"></collection>
+		<collection property="atrzLineVOList" resultMap="atrzLineMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.employee.vo.AtrzLineVO" id="atrzLineMap">
+		<result property="aprvrStampFileGroupNo" column="APRVR_STAMP_FILE_GROUP_NO"/>
+		<result property="atrzLnNo" column="ATRZ_LN_NO"/>
+		<result property="atrzDocNo" column="ATRZ_DOC_NO"/>
+		<result property="atrzEmpNo" column="ATRZ_EMP_NO"/>
+		<result property="atrzLnSttsCd" column="ATRZ_LN_STTS_CD"/>
+		<result property="atrzOpnn" column="ATRZ_OPNN"/>
+		<result property="rjctRsn" column="RJCT_RSN"/>
+		<result property="atrzDt" column="ATRZ_DT"/>
+		<result property="atrzSn" column="ATRZ_SN"/>
+		<result property="aprvrJbgdCd" column="APRVR_JBGD_CD"/>
+		<result property="aprvrOffcsPhoto" column="APRVR_OFFCS_PHOTO"/>
+		<result property="lastAtrzYn" column="LAST_ATRZ_YN"/>
+		<result property="aprvrStampFileSaveLocate" column="APRVR_STAMP_FILE_SAVE_LOCATE"/>
+		<result property="atrzYmd" column="ATRZ_YMD"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.employee.vo.AtrzRefVO" id="atrzRefMap">
+		<result property="atrzRefNo" column="ATRZ_REF_NO"/>
+		<result property="refEmpNo" column="REF_EMP_NO"/>
+		<result property="atrzDocNo" column="ATRZ_DOC_NO"/>
+		<result property="atrzIdntyYn" column="ATRZ_IDNTY_YN"/>
+		<result property="refJbgdCd" column="REF_JBGD_CD"/>
+	</resultMap>
+
+	<resultMap type="com.ohot.employee.vo.ApprovedConcertPlanVO" id="approvedConcertPlanMap">
+		<result property="conPlanNo" column="CON_PLAN_NO"/>
+		<result property="atrzDocNo" column="ATRZ_DOC_NO"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="tkCtgr" column="TK_CTGR"/>
+		<result property="tkLctn" column="TK_LCTN"/>
+		<result property="playerNm" column="PLAYER_NM"/>
+		<result property="hostOrg" column="HOST_ORG"/>
+		<result property="expectedAudience" column="EXPECTED_AUDIENCE"/>
+		<result property="expectedBudget" column="EXPECTED_BUDGET"/>
+		<result property="background" column="BACKGROUND"/>
+		<result property="requests" column="REQUESTS"/>
+		<result property="remarks" column="REMARKS"/>
+		<result property="regYmd" column="REG_YMD"/>
+	</resultMap>
+
+	<select id="treeList" resultMap="departmentMap">
+		/*com.ohot.employee.mapper.EmployeeMapper.treeList*/
+		SELECT 
+		        e.emp_no
+		        , e.emp_nm
+		        , e.emp_eml_addr
+		        , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+		        , e.jbgd_cd
+		        , e.jncmp_ymd
+		        , d.dept_no
+		        , d.dept_nm
+		        , d.up_dept
+		        , d.dept_sn
+		        ,( 
+		       	  SELECT fd.file_save_locate
+		       	    FROM file_detail fd
+		       	   WHERE fd.file_group_no = e.file_group_no
+		       	) AS profile_save_locate 
+		  FROM employee e
+		  LEFT OUTER JOIN department d ON(e.dept_no = d.dept_no)
+		 WHERE e.rsgntn_ymd IS NULL
+	</select>
+	
+	<select id="atrzDocSelectKey" resultType="String" parameterType="com.ohot.employee.vo.AtrzDocVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzDocSelectKey*/
+		SELECT 
+		       #{prefix} || '-' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' ||
+		       LPAD(NVL(TO_NUMBER(SUBSTR(MAX(ATRZ_DOC_NO), -3)), 0)+1,3,'0') AS ATRZ_DOC_NO
+		  FROM ATRZ_DOC
+		 WHERE SUBSTR(ATRZ_DOC_NO, 5, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		   AND ATRZ_DOC_NO LIKE #{prefix} || '-%'
+	</select>
+	
+	<insert id="atrzDocInsert" parameterType="com.ohot.employee.vo.AtrzDocVO" >
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzDocInsert*/
+		INSERT INTO atrz_doc(
+								atrz_doc_no
+								, doc_fm_no
+								, drft_ttl
+								, drft_cn
+								, emrg_yn
+								, drft_ymd
+								<if test="ddlnYmd != null and ddlnYmd != ''">
+									, ddln_ymd
+								</if>
+								, drft_emp_no
+								, drft_jbgd_cd
+								<if test="fileGroupNo != null and fileGroupNo !=''">
+									, file_group_no
+								</if>
+								<if test="drftStampFileGroupNo != null and drftStampFileGroupNo != ''">
+									, drft_stamp_file_group_no
+								</if>
+								, atrz_stts_cd
+								, atrz_ln_stts_cd
+							)  
+		 VALUES (
+				  #{atrzDocNo}
+				  , #{docFmNo}
+				  , #{drftTtl}
+				  , #{drftCn}
+				  , #{emrgYn}
+				  , SYSDATE
+				  <if test="ddlnYmd != null and ddlnYmd != ''">
+					  , #{ddlnYmd}
+				  </if>
+				  , #{drftEmpNo}
+				  , #{drftJbgdCd}
+				  <if test="fileGroupNo !=null and fileGroupNo !=''">
+					  , #{fileGroupNo}
+				  </if>
+				  <if test="drftStampFileGroupNo!=null and drftStampFileGroupNo != ''">
+					  , #{drftStampFileGroupNo}
+				  </if>
+				  , 'APR01'
+				  , 'DRAFTED'
+			    )
+	
+	</insert>
+	
+	<insert id="atrzLineInsert" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzLineInsert*/
+		<selectKey resultType="int" order="BEFORE" keyProperty="atrzLnNo">
+			SELECT NVL(MAX(atrz_ln_no), 0) + 1 FROM atrz_line
+		</selectKey>
+		INSERT
+		  INTO atrz_line(
+		  				  atrz_ln_no
+		  				  , atrz_doc_no
+		  				  , atrz_emp_no
+		  				  , atrz_ln_stts_cd
+		  				  <if test="atrzOpnn!=null and atrzOpnn !=''">
+		  				  	, atrz_opnn
+		  				  </if>
+		  				  <if test="rjctRsn != null and rjctRsn !=''">
+		  				  	, rjct_rsn
+		  				  </if>
+		  				  , atrz_sn
+		  				  , aprvr_jbgd_cd
+		  				  , last_atrz_yn
+		  				  <if test="aprvrStampFileGroupNo != null and aprvrStampFileGroupNo !=''">
+		  				  	, aprvr_stamp_file_group_no
+		  				  </if>
+		  				)
+		 VALUES (
+		 		  #{atrzLnNo}
+		  		  , #{atrzDocNo}
+		  		  , #{atrzEmpNo}
+		  		  , #{atrzLnSttsCd}
+		  		  <if test="atrzOpnn!=null and atrzOpnn !=''">
+		  		  	, #{atrzOpnn}
+		  		  </if>
+		  		  <if test="rjctRsn != null and rjctRsn !=''">
+		  		  	, #{rjctRsn}
+		  		  </if>
+		  		  , #{atrzSn}
+		  		  , #{aprvrJbgdCd}
+		  		  , 'N'
+		  		  <if test="aprvrStampFileGroupNo != null and aprvrStampFileGroupNo !=''">
+		  		  	, #{aprvrStampFileGroupNo}
+		  		  </if>
+		 		)
+		  				
+	</insert>
+
+	<insert id="atrzRefInsert" parameterType="com.ohot.employee.vo.AtrzRefVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzLineInsert*/
+		<selectKey resultType="int" order="BEFORE" keyProperty="atrzRefNo">
+			SELECT NVL(MAX(atrz_ref_no), 0) + 1 FROM atrz_ref
+		</selectKey>
+		INSERT
+		  INTO atrz_ref(
+		  				 atrz_ref_no
+		  				 , ref_emp_no
+		  				 , atrz_doc_no
+		  				 , atrz_idnty_yn
+		  				 , ref_jbgd_cd
+		  				)
+		VALUES (
+				 #{atrzRefNo}
+			  	 , #{refEmpNo}
+			  	 , #{atrzDocNo}
+			  	 , 'N'
+			  	 , #{refJbgdCd}
+				)
+		
+	</insert>
+
+	<insert id="approvedConcertPlanInsert" parameterType="com.ohot.employee.vo.ApprovedConcertPlanVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.approvedConcertPlanInsert*/
+		<selectKey resultType="int" order="BEFORE" keyProperty="conPlanNo">
+			SELECT NVL(MAX(con_plan_no),0)+1 FROM approved_concert_plan
+		</selectKey>
+		INSERT 
+		  INTO approved_concert_plan(
+		  								con_plan_no
+		  								, atrz_doc_no
+		  								, gds_nm
+		  								, tk_ctgr
+		  								, tk_lctn
+		  								, player_nm
+		  								, host_org
+		  								, expected_audience
+		  								, expected_budget
+		  								, background
+		  								<if test="requests != null and requests != ''">
+		  								, requests
+		  								</if>
+		  								<if test="remarks != null and remarks != ''">
+		  								, remarks
+		  								</if>
+									 )
+		VALUES (
+				  #{conPlanNo}
+				  , #{atrzDocNo}
+				  , #{gdsNm}
+				  , #{tkCtgr}
+				  , #{tkLctn}
+				  , #{playerNm}
+				  , #{hostOrg}
+				  , #{expectedAudience}
+				  , #{expectedBudget}
+				  , #{background}
+				  <if test="requests != null and requests != ''">
+				  , #{requests}
+				  </if>
+				  <if test="remarks != null and remarks != ''">
+				  , #{remarks}
+				  </if>
+				)								
+	</insert>
+	
+	<insert id="approvedConversionRequestInsert" parameterType="com.ohot.employee.vo.ApprovedConversionRequestVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.approvedConversionRequestInsert*/
+		<selectKey resultType="int" order="BEFORE" keyProperty="planNo">
+			SELECT NVL(MAX(plan_no),0)+1 FROM approved_conversion_request
+		</selectKey>
+		INSERT
+		  INTO approved_conversion_request (
+											 plan_no
+											 , atrz_doc_no
+											 , mem_email
+											 , mem_full_name
+											 , reason
+											 <if test="remarks != null and remarks != ''">
+											 , remarks
+											 </if>
+											)
+		VALUES (
+				 #{planNo}
+				 , #{atrzDocNo}
+				 , #{memEmail}
+				 , #{memFullName}
+				 , #{reason}
+				 <if test="remarks != null and remarks != ''">
+				  , #{remarks}
+				 </if>
+		 		)
+	</insert>
+	
+	<!-- 부서, 사원, 결재문서, 직인파일 조인  -->
+	<select id="atrzDocDetail" parameterType="String" resultMap="departmentMap">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzDocDetail*/
+		SELECT 
+		       d.dept_no
+		       , d.dept_nm
+		       , e.emp_no
+		       , e.emp_nm
+		       , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+		       , e.jbgd_cd
+		       ,( 
+		       	  SELECT fd.file_save_locate
+		       	    FROM file_detail fd
+		       	   WHERE fd.file_group_no = e.file_group_no
+		       	) AS profile_save_locate 
+		       , ad.atrz_doc_no
+		       , ad.doc_fm_no
+		       , ad.drft_ttl
+		       , ad.emrg_yn
+		       , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD') AS drft_ymd
+		       , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD HH24:MI') AS drft_dt
+		       , ad.ddln_ymd
+		       , ad.drft_emp_no
+		       ,( 
+		       	  SELECT fd.file_save_locate
+		       	    FROM file_detail fd
+		       	   WHERE fd.file_group_no = ad.drft_stamp_file_group_no
+		       	) AS drft_stamp_file_save_locate
+		       , FN_CODE_NO_TO_CODE_NM(ad.drft_jbgd_cd) AS drft_jbgd_cd
+		       , ad.drft_stamp_file_group_no
+		       , FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) AS atrz_stts_cd
+		       , FN_CODE_NO_TO_CODE_NM(ad.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+		       , fg.file_regdate
+		       , fd.file_sn
+		       , fd.file_original_name
+		       , fd.file_save_name
+		       , fd.file_save_locate
+		  FROM department d  
+		  LEFT OUTER JOIN employee e ON(d.dept_no = e.dept_no)
+		  LEFT OUTER JOIN atrz_doc ad ON(e.emp_no = ad.drft_emp_no)
+		  LEFT OUTER JOIN file_group fg ON(ad.drft_stamp_file_group_no = fg.file_group_no)
+		  LEFT OUTER JOIN (
+			                 SELECT 
+			                       file_sn
+			                       , file_group_no
+			                       , file_original_name
+			                       , file_save_name
+			                       , file_save_locate
+			                       , file_size
+			                       , file_ext
+			                       , file_mime
+			                       , file_fancysize
+			                       , file_save_date
+			                       , file_downcount
+			                       , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+			                   FROM file_detail
+			          ) FD ON fg.file_group_no = fd.file_group_no AND FD.RN = 1
+		 WHERE ad.atrz_doc_no = #{atrzDocNo}
+	</select>
+	
+	<!-- 부서, 사원, 결재참조 -->
+	<select id="atrzRefDetail" parameterType="String" resultMap="departmentMap">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzRefDetail*/
+		SELECT 
+		       d.dept_no
+		       , d.dept_nm
+		       , e.emp_no
+		       , e.emp_nm
+		       , e.jbgd_cd
+		       , ar.atrz_ref_no
+		       , ar.ref_emp_no
+		       , ar.atrz_doc_no
+		       , ar.atrz_idnty_yn
+		       , FN_CODE_NO_TO_CODE_NM(ar.ref_jbgd_cd) AS ref_jbgd_cd
+		  FROM DEPARTMENT d  
+		  LEFT OUTER JOIN EMPLOYEE e ON(d.dept_no = e.dept_no)
+		  LEFT OUTER JOIN atrz_ref ar ON(e.emp_no = ar.ref_emp_no)
+		 WHERE ar.atrz_doc_no = #{atrzDocNo}
+	</select>
+
+	<!-- 부서, 사원, 결재선, 직인파일 조인  -->
+	<select id="atrzLineDetail" parameterType="String" resultMap="departmentMap">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzLineDetail*/
+		SELECT 
+		       d.dept_no
+		       , d.dept_nm
+		       , e.emp_no
+		       , e.emp_nm
+		       , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS jbgd_cd
+		       ,( 
+		       	  SELECT fd.file_save_locate
+		       	    FROM file_detail fd
+		       	   WHERE fd.file_group_no = e.file_group_no
+		       	) AS profile_save_locate 
+		       , al.atrz_ln_no
+		       , al.atrz_doc_no
+		       , al.atrz_emp_no
+		       , FN_CODE_NO_TO_CODE_NM(al.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+		       , al.atrz_opnn
+		       , al.rjct_rsn
+		       , TO_CHAR(al.atrz_dt, 'YYYY-MM-DD HH24:MI') AS atrz_dt
+		       , TO_CHAR(al.atrz_dt, 'YYYY-MM-DD') AS atrz_ymd
+		       , al.atrz_sn
+		       , FN_CODE_NO_TO_CODE_NM(al.aprvr_jbgd_cd) AS aprvr_jbgd_cd
+		       , al.last_atrz_yn
+		       , al.aprvr_stamp_file_group_no
+		       ,( 
+		       	  SELECT fd.file_save_locate
+		       	    FROM file_detail fd
+		       	   WHERE fd.file_group_no = al.aprvr_stamp_file_group_no
+		       	) AS aprvr_stamp_file_save_locate
+		       , fg.file_regdate
+		       , fd.file_sn
+		       , fd.file_original_name
+		       , fd.file_save_name
+		       , fd.file_save_locate
+		  FROM DEPARTMENT d  
+		  LEFT OUTER JOIN employee e ON(d.dept_no = e.dept_no)
+		  LEFT OUTER JOIN atrz_line al ON(e.emp_no = al.atrz_emp_no)
+		  LEFT OUTER JOIN file_group fg ON(al.aprvr_stamp_file_group_no = fg.file_group_no)
+		  LEFT OUTER JOIN (
+		                 SELECT 
+		                       file_sn
+		                       , file_group_no
+		                       , file_original_name
+		                       , file_save_name
+		                       , file_save_locate
+		                       , file_size
+		                       , file_ext
+		                       , file_mime
+		                       , file_fancysize
+		                       , file_save_date
+		                       , file_downcount
+		                       , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+		                   FROM file_detail
+		          ) FD ON fg.file_group_no = fd.file_group_no AND FD.RN = 1
+		 WHERE al.atrz_doc_no = #{atrzDocNo}
+		 ORDER BY al.atrz_sn ASC
+	</select>
+
+	<!-- 최종공연승인 select  -->
+	<select id="aprrovedConcertPlanDetail" parameterType="String" resultType="com.ohot.employee.vo.ApprovedConcertPlanVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.aprrovedConcertPlanDetail*/
+		SELECT
+		        con_plan_no
+		        , atrz_doc_no
+		        , gds_nm
+		        , tk_ctgr
+		        , tk_lctn
+		        , player_nm
+		        , host_org
+		        , expected_audience
+		        , expected_budget
+		        , background
+		        , requests
+		        , remarks
+		        , reg_ymd
+		  FROM approved_concert_plan
+		 WHERE atrz_doc_no = #{atrzDocNo}
+	</select>
+	
+	<!-- 최종승인 전환 select -->
+	<select id="approvedConversionRequestDetail" parameterType="String" resultType="com.ohot.employee.vo.ApprovedConversionRequestVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.approvedConversionRequestDetail*/
+		SELECT
+		       plan_no
+		       , atrz_doc_no
+		       , mem_email
+		       , mem_full_name
+		       , reason
+		       , remarks
+		       , reg_ymd
+		  FROM approved_conversion_request
+		 WHERE atrz_doc_no = #{atrzDocNo} 
+	</select>
+	
+	
+	<!-- 자신이 결재자, 참조자에 포함되어있으면 가져오는 결재문서리스트 -->
+	<select id="atrzAllList" resultMap="departmentMap" parameterType="hashMap">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzAllList*/
+		SELECT * FROM
+		(
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY CASE WHEN emrg_yn = 'Y' THEN 0 ELSE 1 END, drft_dt DESC) AS RNUM
+				,COUNT(1) OVER() AS total_cnt
+				,TBL.*
+			FROM(
+			SELECT 
+			    d.dept_no
+			    , d.dept_nm
+			    , e.emp_no
+			    , e.emp_nm
+			    , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+			    , e.jbgd_cd
+			    , ad.atrz_doc_no
+			    ,(
+			        SELECT df.doc_frm_nm
+			          FROM doc_format df
+			         WHERE df.doc_frm_no = ad.doc_fm_no
+			    ) AS doc_frm_nm
+			    , ad.doc_fm_no
+			    , ad.drft_ttl
+			    , ad.emrg_yn
+			    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD HH24:MI') AS drft_dt
+			    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD') AS drft_ymd
+			    , TO_CHAR(ad.ddln_ymd, 'YYYY-MM-DD') AS ddln_ymd
+			    , ad.drft_emp_no
+			    , FN_CODE_NO_TO_CODE_NM(ad.drft_jbgd_cd) AS drft_jbgd_cd
+			    , ad.drft_stamp_file_group_no
+			    , FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) AS atrz_stts_cd
+			    , FN_CODE_NO_TO_CODE_NM(ad.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+			    , al.atrz_ln_no
+			    , al.atrz_emp_no
+			    , FN_CODE_NO_TO_CODE_NM(al.atrz_ln_stts_cd) AS ln_stts_cd
+			    , al.atrz_opnn
+			    , al.rjct_rsn
+			    , al.atrz_dt
+			    , al.atrz_sn
+			    , FN_CODE_NO_TO_CODE_NM(al.aprvr_jbgd_cd) AS aprvr_jbgd_cd
+			    , al.last_atrz_yn
+			    ,'결재자' AS role_type
+			FROM department d
+			LEFT JOIN employee e ON d.dept_no = e.dept_no
+			LEFT JOIN atrz_doc ad ON e.emp_no = ad.drft_emp_no
+			LEFT JOIN atrz_line al ON ad.atrz_doc_no = al.atrz_doc_no
+			LEFT JOIN doc_format df ON ad.doc_fm_no = df.doc_frm_no
+			WHERE al.atrz_emp_no = #{empNo}
+			  AND al.atrz_ln_stts_cd IN ('WAIT', 'READY')
+			<if test="period != null">
+				<choose>
+				  <when test="period == '1WEEK'">
+				    AND ad.drft_ymd >= SYSDATE - 7
+				  </when>
+				  <when test="period == '1MONTH'">
+				    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -1)
+				  </when>
+				  <when test="period == '3MONTH'">
+				    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -3)
+				  </when>
+				</choose>
+			</if>  
+			  
+			<if test="keyword!=null and keyword!=''">
+				AND(
+					<choose>
+						<when test="mode == 'drftTtl'">
+							ad.drft_ttl LIKE '%' || #{keyword} || '%'
+						</when>
+						<when test="mode == 'drafter'">
+							e.emp_nm LIKE '%' || #{keyword} || '%'
+						</when>
+						<when test="mode == 'deptNm'">
+							d.dept_nm LIKE '%' || #{keyword} || '%'
+						</when>
+						<when test="mode == 'docFrmNm'">
+							df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+						</when>
+						<otherwise>
+							(
+								ad.drft_ttl LIKE '%' || #{keyword} || '%' 
+								OR e.emp_nm LIKE '%' || #{keyword} || '%' 
+								OR d.dept_nm LIKE '%' || #{keyword} || '%' 
+								OR df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+							)
+						</otherwise>
+					</choose>
+				)
+			</if>
+	
+	        <if test="startDate != null and startDate != ''">
+	            AND ad.drft_ymd &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	
+	        <if test="endDate != null and endDate != ''">
+	            AND ad.drft_ymd &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	        </if>
+	        
+	        <if test="type == 'EMERGENCY'">
+				AND ad.emrg_yn = 'Y'	        
+	        </if>
+	        <if test="type == 'WAIT'">
+				AND al.atrz_ln_stts_cd = 'WAIT'	        
+	        </if>
+	        <if test="type == 'READY'">
+				AND al.atrz_ln_stts_cd = 'READY'	        
+	        </if>
+			<if test="type == 'REFERENCE'">
+		    	AND 1 = 0 <!-- 참조자 탭에서는 이 SELECT는 강제 필터링됨 -->
+		    </if>
+			
+			UNION ALL
+			
+			SELECT 
+			    d.dept_no
+			    , d.dept_nm
+			    , e.emp_no
+			    , e.emp_nm
+			    , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+			    , e.jbgd_cd
+			    , ad.atrz_doc_no
+			    ,(
+			        SELECT df.doc_frm_nm
+			          FROM doc_format df
+			         WHERE df.doc_frm_no = ad.doc_fm_no
+			    ) AS doc_frm_nm
+			    , ad.doc_fm_no
+			    , ad.drft_ttl
+			    , ad.emrg_yn
+			    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD HH24:MI') AS drft_dt
+			    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD') AS drft_ymd
+			    , TO_CHAR(ad.ddln_ymd, 'YYYY-MM-DD') AS ddln_ymd
+			    , ad.drft_emp_no
+			    , FN_CODE_NO_TO_CODE_NM(ad.drft_jbgd_cd) AS drft_jbgd_cd
+			    , ad.drft_stamp_file_group_no
+			    , FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) AS atrz_stts_cd
+			    , FN_CODE_NO_TO_CODE_NM(ad.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+			    , NULL AS atrz_ln_no
+			    , NULL AS atrz_emp_no
+			    , NULL AS ln_stts_cd
+			    , NULL AS atrz_opnn
+			    , NULL AS rjct_rsn
+			    , NULL AS atrz_dt
+			    , NULL AS atrz_sn
+			    , NULL AS aprvr_jbgd_cd
+			    , NULL AS last_atrz_yn
+			    , '참조자' AS role_type
+			FROM department d
+			LEFT JOIN employee e ON d.dept_no = e.dept_no
+			LEFT JOIN atrz_doc ad ON e.emp_no = ad.drft_emp_no
+			LEFT JOIN atrz_ref ar ON ad.atrz_doc_no = ar.atrz_doc_no
+			LEFT JOIN doc_format df ON ad.doc_fm_no = df.doc_frm_no
+			WHERE ar.ref_emp_no = #{empNo}
+			  AND ar.ATRZ_IDNTY_YN = 'N'
+			<if test="period != null">
+				<choose>
+				  <when test="period == '1WEEK'">
+				    AND ad.drft_ymd >= SYSDATE - 7
+				  </when>
+				  <when test="period == '1MONTH'">
+				    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -1)
+				  </when>
+				  <when test="period == '3MONTH'">
+				    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -3)
+				  </when>
+				</choose>
+			</if>  
+			  
+			<if test="keyword!=null and keyword!=''">
+				AND(
+					<choose>
+						<when test="mode == 'drftTtl'">
+							ad.drft_ttl LIKE '%' || #{keyword} || '%'
+						</when>
+						<when test="mode == 'drafter'">
+							e.emp_nm LIKE '%' || #{keyword} || '%'
+						</when>
+						<when test="mode == 'deptNm'">
+							d.dept_nm LIKE '%' || #{keyword} || '%'
+						</when>
+						<when test="mode == 'docFrmNm'">
+							df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+						</when>
+						<otherwise>
+							(
+								ad.drft_ttl LIKE '%' || #{keyword} || '%' 
+								OR e.emp_nm LIKE '%' || #{keyword} || '%' 
+								OR d.dept_nm LIKE '%' || #{keyword} || '%' 
+								OR df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+							)
+						</otherwise>
+					</choose>
+				)
+			</if>
+	
+	        <if test="startDate != null and startDate != ''">
+	            AND ad.drft_ymd &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	
+	        <if test="endDate != null and endDate != ''">
+	            AND ad.drft_ymd &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	        </if>
+	        
+	        <if test="type == 'EMERGENCY'">
+			  	AND ad.emrg_yn = 'Y'
+			</if>
+			<if test="type == 'WAIT'">
+				AND ad.atrz_ln_stts_cd = 'WAIT'	        
+	        </if>
+	        <if test="type == 'READY'">
+				AND ad.atrz_ln_stts_cd = 'READY'	        
+	        </if>
+	        
+	        <if test="type == 'REFERENCE'">
+				AND 'Y' = 'Y'	        
+	        </if>
+        	) TBL
+		)
+		WHERE RNUM &gt;= #{startRow} AND RNUM &lt;= #{endRow}
+	</select>
+	
+	<update id="atrzLineUpdate" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzLineUpdate*/
+		UPDATE atrz_line
+		   SET 
+		   		atrz_ln_stts_cd = #{atrzLnSttsCd}
+		   		<if test="atrzOpnn!=null and atrzOpnn!=''">
+			   		, atrz_opnn = #{atrzOpnn}
+		   		</if>
+		   		<if test="rjctRsn!=null and rjctRsn!=''">
+			   		, rjct_rsn = #{rjctRsn}
+		   		</if>
+		   		, atrz_dt = SYSDATE
+		   		<if test="aprvrStampFileGroupNo!=null and aprvrStampFileGroupNo!=''">
+			   		, aprvr_stamp_file_group_no = #{aprvrStampFileGroupNo}
+			    </if>
+		 WHERE atrz_doc_no = #{atrzDocNo}
+		   AND atrz_emp_no = #{atrzEmpNo}		
+	</update>
+	
+	<update id="atrzSttsCdUpdate" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzSttsCdUpdate*/
+		UPDATE atrz_line
+		   SET atrz_ln_stts_cd = #{atrzLnSttsCd}
+		 WHERE atrz_doc_no = #{atrzDocNo}
+		   AND atrz_sn = #{atrzSn}	
+	</update>
+	
+	<update id="updateNextLinesToSkipped" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzSttsCdUpdate*/
+		UPDATE atrz_line
+		   SET atrz_ln_stts_cd = 'SKIPPED'
+		 WHERE atrz_doc_no = #{atrzDocNo}
+		   AND atrz_sn > #{atrzSn}
+	</update>
+	
+	<update id="updateAtrzDocToRejected" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.updateAtrzDocToRejected*/
+		UPDATE atrz_doc
+		   SET atrz_stts_cd = 'APR02'
+		 WHERE atrz_doc_no = #{atrzDocNo}		
+	</update>
+	
+	<select id="selectMaxAtrzSn" resultType="int" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.selectMaxAtrzSn*/
+		SELECT MAX(atrz_sn)
+		  FROM atrz_line
+		 WHERE atrz_doc_no = #{atrzDocNo}	
+	</select>
+	
+	<update id="updateAtrzDocToApproved" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.updateAtrzDocToApproved*/
+		UPDATE atrz_doc
+		   SET atrz_stts_cd = 'APR03'
+		 WHERE atrz_doc_no = #{atrzDocNo}
+	</update>
+	
+	<update id="updateConcertPlanRegYmd" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.updateConcertPlanRegYmd*/
+		UPDATE approved_concert_plan
+		   SET reg_Ymd = SYSDATE
+		 WHERE atrz_doc_no = #{atrzDocNo}
+	</update>
+	
+	<update id="updateLastAtrzYn" parameterType="com.ohot.employee.vo.AtrzLineVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.updateLastAtrzYn*/
+		UPDATE atrz_line
+		   SET last_atrz_yn = #{lastAtrzYn}
+		 WHERE atrz_doc_no = #{atrzDocNo}
+		   AND atrz_emp_no = #{atrzEmpNo}
+	</update>
+	
+	<select id="cntEmrgAtrz" resultType="int" parameterType="long">
+		/*com.ohot.employee.mapper.EmployeeMapper.cntEmrgAtrz*/
+		SELECT COUNT(*)
+		  FROM department d  
+		  LEFT OUTER JOIN employee e ON(d.dept_no = e.dept_no)
+		  LEFT OUTER JOIN atrz_doc ad ON(e.emp_no = ad.drft_emp_no)
+          LEFT OUTER JOIN atrz_line al ON(ad.atrz_doc_no = al.atrz_doc_no)
+		 WHERE al.atrz_emp_no = #{atrzEmpNo}
+		   AND al.atrz_ln_stts_cd IN ('WAIT', 'READY')
+           AND ad.emrg_yn = 'Y' 
+	</select>
+	
+	<select id="cntRefAtrz" resultType="int" parameterType="long">
+		/*com.ohot.employee.mapper.EmployeeMapper.cntRefAtrz*/
+		SELECT COUNT(*)   
+		  FROM department d  
+		  LEFT OUTER JOIN employee e ON(d.dept_no = e.dept_no)
+          LEFT OUTER JOIN atrz_ref ar ON(e.emp_no = ar.ref_emp_no)
+		 WHERE ar.ref_emp_no = #{refEmpNo}
+           AND ar.atrz_idnty_yn = 'N'
+	</select>
+	
+	<select id="cntWaitAtrz" resultType="int" parameterType="long">
+		/*com.ohot.employee.mapper.EmployeeMapper.cntWaitAtrz*/
+		SELECT COUNT(*)
+		  FROM department d  
+		  LEFT OUTER JOIN employee e ON(d.dept_no = e.dept_no)
+		  LEFT OUTER JOIN atrz_doc ad ON(e.emp_no = ad.drft_emp_no)
+          LEFT OUTER JOIN atrz_line al ON(ad.atrz_doc_no = al.atrz_doc_no)
+		 WHERE al.atrz_emp_no = #{atrzEmpNo}
+		   AND al.atrz_ln_stts_cd IN ('WAIT')
+	</select>
+	
+	<select id="cntReadyAtrz" resultType="int" parameterType="long">
+		/*com.ohot.employee.mapper.EmployeeMapper.cntReadyAtrz*/
+		SELECT COUNT(*)
+		  FROM department d  
+		  LEFT OUTER JOIN employee e ON(d.dept_no = e.dept_no)
+		  LEFT OUTER JOIN atrz_doc ad ON(e.emp_no = ad.drft_emp_no)
+          LEFT OUTER JOIN atrz_line al ON(ad.atrz_doc_no = al.atrz_doc_no)
+		 WHERE al.atrz_emp_no = #{atrzEmpNo}
+		   AND al.atrz_ln_stts_cd IN ('READY')
+	</select>
+	
+	<select id="atrzDocBoxList" resultMap="departmentMap" parameterType="hashMap">
+		/*com.ohot.employee.mapper.EmployeeMapper.atrzDocBoxList*/
+		SELECT * FROM
+		(
+			SELECT
+				ROW_NUMBER() OVER (ORDER BY CASE WHEN emrg_yn = 'Y' THEN 0 ELSE 1 END, drft_dt DESC) AS RNUM
+				,COUNT(1) OVER() AS total_cnt
+				,TBL.*
+			FROM(
+				SELECT 
+					    d.dept_no
+					    , d.dept_nm
+					    , e.emp_no
+					    , e.emp_nm
+					    , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+					    , e.jbgd_cd
+					    , ad.atrz_doc_no
+					    ,(
+					        SELECT df.doc_frm_nm
+					          FROM doc_format df
+					         WHERE df.doc_frm_no = ad.doc_fm_no
+					    ) AS doc_frm_nm
+					    , ad.doc_fm_no
+					    , ad.drft_ttl
+					    , ad.emrg_yn
+					    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD HH24:MI') AS drft_dt
+					    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD') AS drft_ymd
+					    , TO_CHAR(ad.ddln_ymd, 'YYYY-MM-DD') AS ddln_ymd
+					    , ad.drft_emp_no
+					    , FN_CODE_NO_TO_CODE_NM(ad.drft_jbgd_cd) AS drft_jbgd_cd
+					    , ad.drft_stamp_file_group_no
+					    , FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) AS atrz_stts_cd
+					    , FN_CODE_NO_TO_CODE_NM(ad.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+					    , NULL AS atrz_ln_no
+					    , NULL AS atrz_emp_no
+					    , NULL AS ln_stts_cd
+					    , NULL AS atrz_opnn
+					    , NULL AS rjct_rsn
+					    , NULL AS atrz_dt
+					    , NULL AS atrz_sn
+					    , NULL AS aprvr_jbgd_cd
+					    , NULL AS last_atrz_yn
+					    ,'기안자' AS role_type
+					FROM department d
+					LEFT JOIN employee e ON d.dept_no = e.dept_no
+					LEFT JOIN atrz_doc ad ON e.emp_no = ad.drft_emp_no
+					LEFT JOIN doc_format df ON ad.doc_fm_no = df.doc_frm_no
+					WHERE ad.drft_emp_no = #{empNo}
+				      AND NOT EXISTS (
+				        SELECT 1 FROM atrz_line al
+				         WHERE al.atrz_doc_no = ad.atrz_doc_no
+				           AND al.atrz_emp_no = #{empNo}
+				    )
+				    AND NOT EXISTS (
+				      SELECT 1 FROM atrz_ref ar
+				       WHERE ar.atrz_doc_no = ad.atrz_doc_no
+				         AND ar.ref_emp_no = #{empNo}
+				    )
+				    <if test="period != null">
+						<choose>
+						  <when test="period == '1WEEK'">
+						    AND ad.drft_ymd >= SYSDATE - 7
+						  </when>
+						  <when test="period == '1MONTH'">
+						    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -1)
+						  </when>
+						  <when test="period == '3MONTH'">
+						    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -3)
+						  </when>
+						</choose>
+					</if>  
+					<if test="keyword!=null and keyword!=''">
+						AND(
+							<choose>
+								<when test="mode == 'drftTtl'">
+									ad.drft_ttl LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'drafter'">
+									e.emp_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'deptNm'">
+									d.dept_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'docFrmNm'">
+									df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'atrzDocNo'">
+									ad.atrz_doc_no LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'atrzSttsCd'">
+									FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) LIKE '%' || #{keyword} || '%'
+								</when>
+								<otherwise>
+									(
+										ad.drft_ttl LIKE '%' || #{keyword} || '%' 
+										OR e.emp_nm LIKE '%' || #{keyword} || '%' 
+										OR d.dept_nm LIKE '%' || #{keyword} || '%' 
+										OR df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+										OR ad.atrz_doc_no LIKE '%' || #{keyword} || '%'
+										OR FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) LIKE '%' || #{keyword} || '%'
+									)
+								</otherwise>
+							</choose>
+						)
+					</if>
+			
+			        <if test="startDate != null and startDate != ''">
+			            AND ad.drft_ymd &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			        </if>
+			
+			        <if test="endDate != null and endDate != ''">
+			            AND ad.drft_ymd &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+			        </if>
+			        
+			        <if test="type == 'DRAFTER'">
+					  	AND 1 = 1
+					</if>
+					<if test="type == 'APPROVAL'">
+						AND 1 = 0	        
+			        </if>
+			        <if test="type == 'REFERENCE'">
+						AND 1 = 0	        
+			        </if>
+			        <if test="type == 'ALL' or type == null">
+						AND 1 = 1
+					</if>
+					
+				UNION
+			
+				SELECT 
+					    d.dept_no
+					    , d.dept_nm
+					    , e.emp_no
+					    , e.emp_nm
+					    , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+					    , e.jbgd_cd
+					    , ad.atrz_doc_no
+					    ,(
+					        SELECT df.doc_frm_nm
+					          FROM doc_format df
+					         WHERE df.doc_frm_no = ad.doc_fm_no
+					    ) AS doc_frm_nm
+					    , ad.doc_fm_no
+					    , ad.drft_ttl
+					    , ad.emrg_yn
+					    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD HH24:MI') AS drft_dt
+					    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD') AS drft_ymd
+					    , TO_CHAR(ad.ddln_ymd, 'YYYY-MM-DD') AS ddln_ymd
+					    , ad.drft_emp_no
+					    , FN_CODE_NO_TO_CODE_NM(ad.drft_jbgd_cd) AS drft_jbgd_cd
+					    , ad.drft_stamp_file_group_no
+					    , FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) AS atrz_stts_cd
+					    , FN_CODE_NO_TO_CODE_NM(ad.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+					    , al.atrz_ln_no
+					    , al.atrz_emp_no
+					    , FN_CODE_NO_TO_CODE_NM(al.atrz_ln_stts_cd) AS ln_stts_cd
+					    , al.atrz_opnn
+					    , al.rjct_rsn
+					    , al.atrz_dt
+					    , al.atrz_sn
+					    , FN_CODE_NO_TO_CODE_NM(al.aprvr_jbgd_cd) AS aprvr_jbgd_cd
+					    , al.last_atrz_yn
+					    ,'결재자' AS role_type
+					FROM department d
+					LEFT JOIN employee e ON d.dept_no = e.dept_no
+					LEFT JOIN atrz_doc ad ON e.emp_no = ad.drft_emp_no
+					LEFT JOIN atrz_line al ON ad.atrz_doc_no = al.atrz_doc_no
+					LEFT JOIN doc_format df ON ad.doc_fm_no = df.doc_frm_no
+					WHERE al.atrz_emp_no = #{empNo}
+					  AND (
+					  		al.atrz_ln_stts_cd IN ('APPROVED', 'REJECTED')
+					   		OR ad.atrz_stts_cd = 'DRAFTED'
+					   	)
+					  <if test="period != null">
+							<choose>
+							  <when test="period == '1WEEK'">
+							    AND ad.drft_ymd >= SYSDATE - 7
+							  </when>
+							  <when test="period == '1MONTH'">
+							    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -1)
+							  </when>
+							  <when test="period == '3MONTH'">
+							    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -3)
+							  </when>
+							</choose>
+						</if>   	
+					   	
+					  <if test="keyword!=null and keyword!=''">
+						AND(
+							<choose>
+								<when test="mode == 'drftTtl'">
+									ad.drft_ttl LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'drafter'">
+									e.emp_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'deptNm'">
+									d.dept_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'docFrmNm'">
+									df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'atrzDocNo'">
+									ad.atrz_doc_no LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'atrzSttsCd'">
+									FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) LIKE '%' || #{keyword} || '%'
+								</when>
+								<otherwise>
+									(
+										ad.drft_ttl LIKE '%' || #{keyword} || '%' 
+										OR e.emp_nm LIKE '%' || #{keyword} || '%' 
+										OR d.dept_nm LIKE '%' || #{keyword} || '%' 
+										OR df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+										OR ad.atrz_doc_no LIKE '%' || #{keyword} || '%'
+										OR FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) LIKE '%' || #{keyword} || '%'
+									)
+								</otherwise>
+							</choose>
+						)
+					</if>
+			
+			        <if test="startDate != null and startDate != ''">
+			            AND ad.drft_ymd &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			        </if>
+			
+			        <if test="endDate != null and endDate != ''">
+			            AND ad.drft_ymd &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+			        </if>
+			        
+			        <if test="type == 'DRAFTER'">
+					  	AND 1 = 0
+					</if>
+					<if test="type == 'APPROVAL'">
+						AND 1 = 1	        
+			        </if>
+			        <if test="type == 'REFERENCE'">
+						AND 1 = 0	        
+			        </if>
+			        <if test="type == 'ALL' or type == null">
+						AND 1 = 1
+					</if>
+					
+					UNION 
+					
+					SELECT 
+					    d.dept_no
+					    , d.dept_nm
+					    , e.emp_no
+					    , e.emp_nm
+					    , FN_CODE_NO_TO_CODE_NM(e.jbgd_cd) AS position
+					    , e.jbgd_cd
+					    , ad.atrz_doc_no
+					    ,(
+					        SELECT df.doc_frm_nm
+					          FROM doc_format df
+					         WHERE df.doc_frm_no = ad.doc_fm_no
+					    ) AS doc_frm_nm
+					    , ad.doc_fm_no
+					    , ad.drft_ttl
+					    , ad.emrg_yn
+					    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD HH24:MI') AS drft_dt
+					    , TO_CHAR(ad.drft_ymd, 'YYYY-MM-DD') AS drft_ymd
+					    , TO_CHAR(ad.ddln_ymd, 'YYYY-MM-DD') AS ddln_ymd
+					    , ad.drft_emp_no
+					    , FN_CODE_NO_TO_CODE_NM(ad.drft_jbgd_cd) AS drft_jbgd_cd
+					    , ad.drft_stamp_file_group_no
+					    , FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) AS atrz_stts_cd
+					    , FN_CODE_NO_TO_CODE_NM(ad.atrz_ln_stts_cd) AS atrz_ln_stts_cd
+					    , NULL AS atrz_ln_no
+					    , NULL AS atrz_emp_no
+					    , NULL AS ln_stts_cd
+					    , NULL AS atrz_opnn
+					    , NULL AS rjct_rsn
+					    , NULL AS atrz_dt
+					    , NULL AS atrz_sn
+					    , NULL AS aprvr_jbgd_cd
+					    , NULL AS last_atrz_yn
+					    , '참조자' AS role_type
+					FROM department d
+					LEFT JOIN employee e ON d.dept_no = e.dept_no
+					LEFT JOIN atrz_doc ad ON e.emp_no = ad.drft_emp_no
+					LEFT JOIN atrz_ref ar ON ad.atrz_doc_no = ar.atrz_doc_no
+					LEFT JOIN doc_format df ON ad.doc_fm_no = df.doc_frm_no
+					WHERE ar.ref_emp_no = #{empNo}
+					  AND ar.ATRZ_IDNTY_YN = 'Y'
+					<if test="period != null">
+						<choose>
+						  <when test="period == '1WEEK'">
+						    AND ad.drft_ymd >= SYSDATE - 7
+						  </when>
+						  <when test="period == '1MONTH'">
+						    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -1)
+						  </when>
+						  <when test="period == '3MONTH'">
+						    AND ad.drft_ymd >= ADD_MONTHS(SYSDATE, -3)
+						  </when>
+						</choose>
+					</if>    
+					<if test="keyword!=null and keyword!=''">
+						AND(
+							<choose>
+								<when test="mode == 'drftTtl'">
+									ad.drft_ttl LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'drafter'">
+									e.emp_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'deptNm'">
+									d.dept_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'docFrmNm'">
+									df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'atrzDocNo'">
+									ad.atrz_doc_no LIKE '%' || #{keyword} || '%'
+								</when>
+								<when test="mode == 'atrzSttsCd'">
+									FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) LIKE '%' || #{keyword} || '%'
+								</when>
+								<otherwise>
+									(
+										ad.drft_ttl LIKE '%' || #{keyword} || '%' 
+										OR e.emp_nm LIKE '%' || #{keyword} || '%' 
+										OR d.dept_nm LIKE '%' || #{keyword} || '%' 
+										OR df.doc_frm_nm LIKE '%' || #{keyword} || '%'
+										OR ad.atrz_doc_no LIKE '%' || #{keyword} || '%'
+										OR FN_CODE_NO_TO_CODE_NM(ad.atrz_stts_cd) LIKE '%' || #{keyword} || '%'
+									)
+								</otherwise>
+							</choose>
+						)
+					</if>
+			
+			        <if test="startDate != null and startDate != ''">
+			            AND ad.drft_ymd &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+			        </if>
+			
+			        <if test="endDate != null and endDate != ''">
+			            AND ad.drft_ymd &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+			        </if>  
+			        
+			        <if test="type == 'DRAFTER'">
+					  	AND 1 = 0
+					</if>
+					<if test="type == 'APPROVAL'">
+						AND 1 = 0	        
+			        </if>
+			        <if test="type == 'REFERENCE'">
+						AND 1 = 1	        
+			        </if>
+			        <if test="type == 'ALL' or type == null">
+						AND 1 = 1
+					</if>
+			) TBL
+		)
+		WHERE RNUM &gt;= #{startRow} AND RNUM &lt;= #{endRow}
+	</select>
+	
+	<update id="updateRefIdntyYn" parameterType="com.ohot.employee.vo.AtrzRefVO">
+		/*com.ohot.employee.mapper.EmployeeMapper.updateRefIdntyYn*/
+		UPDATE atrz_ref
+		   SET atrz_idnty_yn = 'Y'
+		 WHERE atrz_doc_no = #{atrzDocNo}
+		   AND ref_emp_no = #{refEmpNo}
+	</update>
+	
+	
+	<!-- ///// 스케줄 시작 ///// -->
+	<select id="getEmployeeSchedule" resultType="com.ohot.employee.vo.EmployeeScheduleVO">
+	/* com.ohot.employee.mapper.EmployeeMapper.getEmployeeSchedule */
+		SELECT 
+		    EMPLOYEE_SCHEDULE_NO
+		    , START_DATE
+		    , END_DATE
+		    , DEPT_NO
+		    , BACKGROUND_COLOR
+		    , TEXT_COLOR
+		    , BORDER_COLOR
+		    , DEL_YN
+		    , TITLE
+		    , DESCRIPTION
+		    , EMP_NO
+		FROM EMPLOYEE_SCHEDULE
+		WHERE (EMP_NO = #{empNo}
+		OR DEPT_NO = (SELECT DEPT_NO
+                    FROM EMPLOYEE
+                    WHERE EMP_NO = #{empNo}
+                 ) 
+            )
+		AND DEL_YN = 'N'
+	</select>
+	
+	<insert id="addEmployeeSchedule" parameterType="com.ohot.employee.vo.EmployeeScheduleVO">
+	/* com.ohot.employee.mapper.EmployeeMapper.addEmployeeSchedule */
+		<selectKey resultType="int" order="BEFORE" keyProperty="employeeScheduleNo">
+			SELECT NVL(MAX(employee_schedule_no), 0) + 1
+			FROM  employee_schedule
+		</selectKey>
+		
+		INSERT INTO employee_schedule (
+		    employee_schedule_no
+		    ,title
+		    ,description
+		    ,start_date
+		    ,end_date
+		    <if test="empNo != null and empNo != 0" >
+		    ,emp_no
+		    </if>
+		    <if test="deptNo != null and deptNo != 0" >
+		    ,dept_no
+		    </if>
+		    ,background_color
+		    ,text_color
+		    ,border_color
+		) VALUES (
+		    #{employeeScheduleNo}
+		    , #{title}
+		    , #{description}
+		    , #{startDate}
+		    , #{endDate}
+		    <if test="empNo != null and empNo != 0" >
+		    , #{empNo}
+		    </if>
+		    <if test="deptNo != null and deptNo != 0" >
+		    , #{deptNo}
+		    </if>
+		    , #{backgroundColor}
+		    , #{textColor}
+		    , #{borderColor}
+		)
+	</insert>
+	
+	<update id="editEmployeeSchedule" parameterType="com.ohot.employee.vo.EmployeeScheduleVO">
+		/* com.ohot.employee.mapper.EmployeeMapper.editEmployeeSchedule */
+		UPDATE employee_schedule
+			<set>
+				<if test="title!=null and title!=''" >
+					title = #{title},
+				</if>
+				<if test="description!=null and description!=''" >
+					description = #{description},
+				</if>
+				<if test="startDate!=null and startDate!=''" >
+					start_date = #{startDate},
+				</if>
+				<if test="endDate!=null and endDate!=''" >
+					end_date = #{endDate},
+				</if>
+				<if test="backgroundColor!=null and backgroundColor!=''" >
+					background_color = #{backgroundColor},
+				</if>
+				<if test="textColor!=null and textColor!=''" >
+					text_color = #{textColor},
+				</if>
+				<if test="borderColor!=null and borderColor!=''" >
+					border_color = #{borderColor},
+				</if>
+			</set>
+		WHERE
+        	employee_schedule_no = #{employeeScheduleNo}
+	</update>
+	
+	<update id="deleteEmployeeSchedule" parameterType="int">
+	/* com.ohot.employee.mapper.EmployeeMapper.deleteEmployeeSchedule */
+		UPDATE employee_schedule
+		SET del_yn = 'Y'
+		WHERE
+        	employee_schedule_no = #{employeeScheduleNo}
+	</update>
+	<!-- ///// 스케줄 끝 ///// -->
+	
+</mapper>

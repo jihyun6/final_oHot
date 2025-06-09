@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.mapper.WhoIsTheBestMapper">
+
+<resultMap type="com.ohot.vo.ArtistVO" id="artistMap">
+	<result property="rnum" column="RNUM"/>
+	<result property="artNo" column="ART_NO"/>
+	<result property="artGroupNo" column="ART_GROUP_NO"/>
+	<result property="artActNm" column="ART_ACT_NM"/>
+	<result property="artExpln" column="ART_EXPLN"/>
+	<result property="artRegYmd" column="ART_REG_YMD"/>
+	<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	<result property="memNo" column="MEM_NO"/>
+	<result property="artDelYn" column="ART_DEL_YN"/>
+	<result property="cnt" column="CNT"/>
+	<association property="memVO" resultMap="memberMap"></association>
+	<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+</resultMap>
+	
+<resultMap type="com.ohot.vo.MemberVO" id="memberMap">
+	<result property="memNo" column="MEM_NO"/>
+	<result property="memLastName" column="MEM_LAST_NAME"/>
+	<result property="memFirstName" column="MEM_FIRST_NAME"/>
+	<result property="memNicknm" column="MEM_NICKNM"/>
+	<result property="memEmail" column="MEM_EMAIL"/>
+	<result property="memTelno" column="MEM_TELNO"/>
+	<result property="memBirth" column="MEM_BIRTH"/>
+	<result property="memPswd" column="MEM_PSWD"/>
+	<result property="joinYmd" column="JOIN_YMD"/>
+	<result property="secsnYmd" column="SECSN_YMD"/>
+	<result property="memAccessToken" column="MEM_ACCESS_TOKEN"/>
+	<result property="enabled" column="ENABLED"/>
+	<result property="memStatSecCodeNo" column="MEM_STAT_SEC_CODE_NO"/>
+	<result property="memSecCodeNo" column="MEM_SEC_CODE_NO"/>
+	<result property="memDelYn" column="MEM_DEL_YN"/>
+	<result property="snsMemYn" column="SNS_MEM_YN"/>
+</resultMap>
+	
+<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+	<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	<result property="fileRegdate" column="FILE_REGDATE"/>
+	<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+</resultMap>
+
+<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+	<result property="fileSn" column="FILE_SN"/>
+	<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+	<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+	<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+	<result property="fileSize" column="FILE_SIZE"/>
+	<result property="fileExt" column="FILE_EXT"/>
+	<result property="fileMime" column="FILE_MIME"/>
+	<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+	<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+	<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+</resultMap>
+
+<select id="allPlayers" resultMap="artistMap">
+		 SELECT
+			 	A.art_no
+			 	, A.art_group_no
+			 	, A.art_act_nm
+			 	, A.art_expln
+			 	, REGEXP_REPLACE(a.art_reg_ymd, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS art_group_reg_ymd
+			 	, A.file_group_no
+			 	, M.mem_no
+			 	, M.mem_last_name
+			 	, M.mem_first_name
+			    , FG.file_group_no
+			    , FG.file_regdate
+		        , FD.file_sn
+		        , FD.file_original_name
+		        , FD.file_save_name
+		        , FD.file_save_locate
+		        , FD.file_size
+		        , FD.file_ext
+		        , FD.file_mime
+		        , FD.file_fancysize
+		        , FD.file_save_date
+		        , FD.file_downcount
+ 		   FROM artist A 
+ 		   LEFT OUTER JOIN member M ON(A.mem_no = M.mem_no)
+	       LEFT OUTER JOIN file_group FG ON(A.file_group_no = FG.file_group_no)
+	       LEFT OUTER JOIN (
+	              SELECT 
+	              		file_sn
+	              		, file_group_no
+	              		, file_original_name
+	              		, file_save_name
+	                    , file_save_locate
+	                    , file_size
+	                    , file_ext
+	                    , file_mime
+	                    , file_fancysize
+	                    , file_save_date
+	                    , file_downcount
+	                    , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+	            FROM file_detail
+	      ) FD ON FG.file_group_no = FD.file_group_no AND FD.RN = 1
+	       WHERE A.ART_DEL_YN='N'
+	       order by art_no
+</select>
+
+<select id="winners" resultMap="artistMap">
+		 SELECT
+			 	A.art_no
+			 	, A.art_group_no
+			 	, A.art_act_nm
+			 	, A.art_expln
+			 	, REGEXP_REPLACE(a.art_reg_ymd, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS art_group_reg_ymd
+			 	, A.file_group_no
+			 	, M.mem_no
+			 	, M.mem_last_name
+			 	, M.mem_first_name
+			    , FG.file_group_no
+			    , FG.file_regdate
+		        , FD.file_sn
+		        , FD.file_original_name
+		        , FD.file_save_name
+		        , FD.file_save_locate
+		        , FD.file_size
+		        , FD.file_ext
+		        , FD.file_mime
+		        , FD.file_fancysize
+		        , FD.file_save_date
+		        , FD.file_downcount
+                , NVL(WB.CNT,0) as CNT
+ 		   FROM artist A 
+ 		   LEFT OUTER JOIN member M ON(A.mem_no = M.mem_no)
+	       LEFT OUTER JOIN file_group FG ON(A.file_group_no = FG.file_group_no)
+           LEFT JOIN (SELECT COUNT(ART_ACT_NM) AS CNT ,ART_ACT_NM
+                        FROM WHO_IS_THE_BEST A
+                        GROUP BY ART_ACT_NM
+                        )WB ON A.ART_ACT_NM = WB.ART_ACT_NM
+	       LEFT OUTER JOIN (
+	              SELECT 
+	              		file_sn
+	              		, file_group_no
+	              		, file_original_name
+	              		, file_save_name
+	                    , file_save_locate
+	                    , file_size
+	                    , file_ext
+	                    , file_mime
+	                    , file_fancysize
+	                    , file_save_date
+	                    , file_downcount
+	                    , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS RN
+	            FROM file_detail
+	      ) FD ON FG.file_group_no = FD.file_group_no AND FD.RN = 1
+	      WHERE A.ART_DEL_YN = 'N'
+          ORDER BY NVL(WB.CNT, 0) DESC
+          
+</select>
+
+<insert id="getWinner" parameterType="com.ohot.vo.WhoIsTheBestVO">
+	<selectKey resultType="int" order="BEFORE" keyProperty="witbNo">
+		SELECT NVL(MAX(WITB_NO),0)+1
+		  FROM WHO_IS_THE_BEST
+	</selectKey>
+	INSERT INTO WHO_IS_THE_BEST(WITB_NO, ART_ACT_NM)
+	VALUES (#{witbNo} , #{artActNm})
+	
+</insert>
+</mapper>

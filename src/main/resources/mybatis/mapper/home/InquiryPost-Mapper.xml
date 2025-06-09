@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.inquiry.mapper.InquiryPostMapper">
+
+	<select id="getInquiryPostList" parameterType="hashMap" resultMap="boardPostMap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.getInquiryPostList */
+	  SELECT * 
+	  FROM (
+	    SELECT TMP.*, ROWNUM AS RNUM
+	    FROM (
+		   SELECT 
+		        level
+		        ,
+		        (
+		          SELECT bbs_nm FROM board_type WHERE bbs_type_cd_no = 4
+		        ) AS bbs_nm
+		        , bp.bbs_post_no
+		        , 
+		        CASE 
+		          WHEN level = 1 THEN bp.bbs_title
+		          ELSE RPAD('│   ', (level - 2) * 4, '│   ') || '└ ' || bp.bbs_title
+		        END AS bbs_title
+		        , bp.bbs_cn
+		        , bp.bbs_chg_dt
+		        , bp.bbs_html_cn
+		        , bp.bbs_del_yn
+		        , bp.parent_post_no
+		        , m.mem_no
+		        , NVL(ip.inq_writer, '👑관리자') AS inq_writer
+		        ,
+		        CASE 
+		          WHEN TRUNC(SYSDATE) = TRUNC(bp.bbs_reg_dt)
+		          THEN TO_CHAR(bp.bbs_reg_dt, 'HH24:MI')
+		          ELSE TO_CHAR(bp.bbs_reg_dt, 'YYYY-MM-DD')
+		        END AS display_date
+		        , bp.bbs_reg_dt
+		        , TO_CHAR(bp.bbs_reg_dt, 'YYYY-MM-DD') AS bbs_reg_ymd
+		        , m.mem_email
+		        , NVL((
+			          SELECT it.inq_type_nm
+			          FROM inquiry_type it
+			          WHERE ip.inq_type_no = it.inq_type_no
+			        ), ' ') AS inq_type_nm
+		        ,
+		        CASE ip.ans_yn 
+		          WHEN 'Y' THEN '답변 완료'
+		          WHEN 'N' THEN '미답변'
+		          ELSE '—'
+		        END AS ans_yn
+		        , ip.inq_pswd
+		    FROM board_post bp
+	        LEFT OUTER JOIN inquiry_post ip ON bp.bbs_post_no = ip.bbs_post_no
+	        LEFT OUTER JOIN inquiry_type it ON ip.inq_type_no = it.inq_type_no
+	        LEFT OUTER JOIN member m ON ip.mem_no = m.mem_no
+	      <where>
+	        bp.bbs_type_cd_no = 4
+	        <choose>
+	        	<when test="memNo!=null and memNo!=''">
+	        	  AND m.mem_no = #{memNo}
+	        	</when>
+	        	<when test="isAdmin != true"> <!-- 회원일 경우 -->
+		          AND bp.bbs_del_yn = 'N'
+	        	</when>
+	        	<otherwise> <!-- 관리자일 경우 -->
+		          AND bp.parent_post_no IS null
+	        	</otherwise>
+	        </choose>
+	        <if test="keyword != null and keyword != ''">
+	        	<if test="mode == 'all'">
+	        		AND LOWER(bp.bbs_title) LIKE '%' || LOWER(#{keyword}) || '%'
+	        		AND LOWER(bp.bbs_cn) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        	<if test="mode == 'bbsTitle'">
+		          AND LOWER(bp.bbs_title) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        	<if test="mode == 'bbsCn'">
+		          AND LOWER(bp.bbs_cn) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        	<if test="mode == 'inqWriter'">
+		          AND LOWER(ip.inq_writer) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        </if>
+	        <if test="inqTypeNo != null and inqTypeNo != ''">
+	          AND ip.inq_type_no = #{inqTypeNo}
+	        </if>
+	        <if test="startDate != null and startDate != ''">
+	          AND TRUNC(bp.bbs_reg_dt) &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="endDate != null and endDate != ''">
+	          AND TRUNC(bp.bbs_reg_dt) &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="bbsDelYn != null and bbsDelYn != ''">
+	          AND bp.bbs_del_yn = #{bbsDelYn}
+	        </if>
+	        <if test="ansYn != null and ansYn != ''">
+	          AND ip.ans_yn = #{ansYn}
+	        </if>
+	        <if test="inqWriter != null and inqWriter != ''">
+	          AND ip.inq_writer = #{inqWriter}
+	        </if>
+	        <if test="isMember != null and isMember != ''">
+	        	<if test="isMember == 'Y'.toString()">
+	        		AND	m.mem_no IS NOT null
+	        	</if>
+	        	<if test="isMember == 'N'.toString()">
+	        		AND	m.mem_no IS null
+	        	</if>
+	        </if>
+	        <if test="isSecret != null and isSecret != ''">
+	        	<if test="isSecret == 'Y'.toString()">
+	        		AND	ip.inq_pswd IS NOT null
+	        	</if>
+	        	<if test="isSecret == 'N'.toString()">
+	        		AND	ip.inq_pswd IS null
+	        	</if>
+	        </if>
+	      </where>
+	      START WITH bp.parent_post_no IS NULL
+	      CONNECT BY PRIOR bp.bbs_post_no = bp.parent_post_no
+	      ORDER SIBLINGS BY bp.bbs_post_no DESC
+	    ) TMP
+	    WHERE ROWNUM &lt;= #{end}
+	  )
+	  WHERE RNUM &gt;= #{start}
+	</select>
+	<select id="getFileDetail" parameterType="long" resultMap="fileGroupMap">
+		SELECT fg.file_regdate
+		        ,fd.file_sn
+		        , fd.file_group_no
+		        , fd.file_original_name
+		        , fd.file_save_name
+		        , fd.file_save_locate
+		        , fd.file_size
+		        , fd.file_ext
+		        , fd.file_mime
+		        , fd.file_fancysize
+		        , fd.file_save_date
+		        , fd.file_downcount
+		FROM file_group fg
+		LEFT OUTER JOIN file_detail fd ON fg.file_group_no = fd.file_group_no
+		WHERE fg.file_group_no=#{fileGroupNo}
+	</select>
+
+	
+	<select id="getTotalCnt" resultType="int" parameterType="hashMap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.getTotalCnt */
+	    SELECT COUNT(*)
+	    FROM board_post bp
+		    LEFT OUTER JOIN inquiry_post ip ON bp.bbs_post_no = ip.bbs_post_no
+		    LEFT OUTER JOIN member m ON ip.mem_no = m.mem_no
+	    <where>
+	       bp.bbs_type_cd_no = 4
+	       <choose>
+	       		<when test="memNo!=null and memNo!=''">
+	        	  AND m.mem_no = #{memNo}
+	        	</when>
+	        	<when test="isAdmin != true"> <!-- 회원일 경우 -->
+		          AND bp.bbs_del_yn = 'N'
+	        	</when>
+	        	<otherwise> <!-- 관리자일 경우 -->
+		          AND bp.parent_post_no IS null
+	        	</otherwise>
+	        </choose>
+	        <if test="keyword != null and keyword != ''">
+	        	<if test="mode == 'all'">
+	        		AND LOWER(bp.bbs_title) LIKE '%' || LOWER(#{keyword}) || '%'
+	        		AND LOWER(bp.bbs_cn) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        	<if test="mode == 'bbsTitle'">
+		          AND LOWER(bp.bbs_title) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        	<if test="mode == 'bbsCn'">
+		          AND LOWER(bp.bbs_cn) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        	<if test="mode == 'inqWriter'">
+		          AND LOWER(ip.inq_writer) LIKE '%' || LOWER(#{keyword}) || '%'
+	        	</if>
+	        </if>
+	        <if test="inqTypeNo != null and inqTypeNo != ''">
+	          AND ip.inq_type_no = #{inqTypeNo}
+	        </if>
+	        <if test="startDate != null and startDate != ''">
+	          AND TRUNC(bp.bbs_reg_dt) &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="endDate != null and endDate != ''">
+	          AND TRUNC(bp.bbs_reg_dt) &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="bbsDelYn != null and bbsDelYn != ''">
+	          AND bp.bbs_del_yn = #{bbsDelYn}
+	        </if>
+	        <if test="ansYn != null and ansYn != ''">
+	          AND ip.ans_yn = #{ansYn}
+	        </if>
+	        <if test="inqWriter != null and inqWriter != ''">
+	          AND ip.inq_writer = #{inqWriter}
+	        </if>
+	        <if test="isMember != null and isMember != ''">
+	        	<if test="isMember == 'Y'.toString()">
+	        		AND	m.mem_no IS NOT null
+	        	</if>
+	        	<if test="isMember == 'N'.toString()">
+	        		AND	m.mem_no IS null
+	        	</if>
+	        </if>
+	        <if test="isSecret != null and isSecret != ''">
+	        	<if test="isSecret == 'Y'.toString()">
+	        		AND	ip.inq_pswd IS NOT null
+	        	</if>
+	        	<if test="isSecret == 'N'.toString()">
+	        		AND	ip.inq_pswd IS null
+	        	</if>
+	        </if>
+	      </where>
+	</select>
+	
+	<select id="getInquiryDetail" parameterType="int" resultMap="boardPostMap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.getInquiryDetail */
+	SELECT 
+	    level
+	    , (
+	        SELECT bbs_nm
+	        FROM board_type
+	        WHERE bbs_type_cd_no = 4
+	    ) AS bbs_nm
+	    , bp.bbs_post_no
+	    ,
+	    CASE 
+	        WHEN level = 1 then bp.bbs_title
+	        ELSE rpad('│   ', (level - 2) * 4, '│   ') || '└ ' || bp.bbs_title
+	    END AS bbs_title
+	    , bp.bbs_cn
+	    , bp.bbs_chg_dt
+	    , bp.bbs_html_cn
+	    , fg.file_group_no
+	    , fd.file_save_locate
+	    , bp.parent_post_no
+	    , m.mem_no
+	    , NVL(ip.inq_writer, '관리자') AS inq_writer
+	    ,
+	    CASE 
+	        WHEN TRUNC(SYSDATE) = TRUNC(bp.bbs_reg_dt)
+	        THEN TO_CHAR(bp.bbs_reg_dt, 'HH24:MI')
+	        ELSE TO_CHAR(bp.bbs_reg_dt, 'YYYY-MM-DD HH24:MI')
+	    END AS display_date
+	    , bbs_reg_dt
+	    , m.mem_email
+	    , (
+	        SELECT inq_type_nm
+	        FROM inquiry_type it
+	        WHERE ip.inq_type_no = it.inq_type_no
+	    ) AS inq_type_nm
+	    ,
+	    CASE ip.ans_yn 
+	        WHEN 'Y' then '답변 완료'
+	        WHEN 'N' then '미답변'
+	        ELSE '—'
+	    END AS ans_yn
+	    , ip.inq_pswd
+	FROM 
+	    board_post bp
+	    LEFT OUTER JOIN inquiry_post ip ON bp.bbs_post_no = ip.bbs_post_no
+	    LEFT OUTER JOIN member m ON ip.mem_no = m.mem_no
+	    LEFT OUTER JOIN file_group fg ON bp.file_group_no = fg.file_group_no
+	    LEFT OUTER JOIN file_detail fd ON fg.file_group_no = fd.file_group_no
+	WHERE 
+	    bp.bbs_type_cd_no = 4
+	/* AND bp.bbs_del_yn = 'N' */
+	AND bp.bbs_post_no=#{boardNo}
+	START WITH 
+	    bp.parent_post_no IS null
+	CONNECT BY 
+	    PRIOR bp.bbs_post_no = bp.parent_post_no
+	</select>
+	
+	<select id="getReplyPost" parameterType="int" resultMap="boardPostMap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.getReplyPost */
+		SELECT 
+		      bp.bbs_post_no
+		    , bp.bbs_title
+		    , bp.bbs_cn
+		    , fg.file_group_no
+		    , fd.file_save_locate
+		    , bp.parent_post_no
+		    ,
+		    CASE 
+		        WHEN TRUNC(SYSDATE) = TRUNC(bp.bbs_reg_dt)
+		        THEN TO_CHAR(bp.bbs_reg_dt, 'HH24:MI')
+		        ELSE TO_CHAR(bp.bbs_reg_dt, 'YYYY-MM-DD')
+		    END AS display_date
+		    , bbs_reg_dt
+		    , ip.inq_pswd
+		FROM 
+		    board_post bp
+		    LEFT OUTER JOIN inquiry_post ip ON bp.bbs_post_no = ip.bbs_post_no
+		    LEFT OUTER JOIN file_group fg ON bp.file_group_no = fg.file_group_no
+		    LEFT OUTER JOIN file_detail fd ON fg.file_group_no = fd.file_group_no
+		WHERE 
+		    bp.bbs_type_cd_no = 4
+		AND bp.bbs_del_yn = 'N'
+		AND bp.parent_post_no=#{boardNo}
+	</select>
+	
+	<select id="getMaxNo" resultType="int">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.getMaxNo */
+		SELECT NVL(Max(bbs_post_no), 0)+1 AS bbs_post_no
+		FROM board_post
+	</select>
+	
+	<select id="getInqTypeVO" resultType="com.ohot.home.inquiry.vo.InquiryTypeVO">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.getInqTypeVO */
+		SELECT INQ_TYPE_NO, INQ_TYPE_NM
+		FROM INQUIRY_TYPE
+	</select>
+	
+	<insert id="insertBoardPost" parameterType="hashMap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.insertBoardPost */
+		INSERT INTO board_post (
+		    bbs_post_no
+		    , bbs_type_cd_no
+		    , bbs_title
+		    , bbs_html_cn
+		    , bbs_cn
+		    , art_group_no
+		    , file_group_no
+		) VALUES (
+			#{bbsPostNo}
+			, #{bbsTypeCdNo}
+			, #{bbsTitle}
+			, #{bbsHtmlCn}
+			, #{bbsCn}
+			, #{artGroupNo}
+			, #{fileGroupNo}
+		)
+	</insert>
+	<insert id="insertInquiryPost" parameterType="hashMap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.insertInquiryPost */
+		INSERT INTO inquiry_post (
+		    bbs_post_no
+		    , mem_no
+		    , ans_yn
+		    , inq_type_no
+		    , inq_pswd
+		    , inq_writer
+		) VALUES (
+			#{bbsPostNo}
+			, #{memNo}
+			, #{ansYn}
+			, #{inqTypeNo}
+			, #{inqPswd}
+			, #{inqWriter}
+		)
+	</insert>
+	
+	<update id="editBoardPost" parameterType="hashMap" >
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.editBoardPost */
+		UPDATE 	board_post
+		<set>
+				bbs_chg_dt = SYSDATE
+			<if test="bbsTitle != null and bbsTitle != ''">
+		      	,bbs_title=#{bbsTitle}
+		    </if>
+		    <if test="bbsHtmlCn != null and bbsHtmlCn != ''">
+		      	, bbs_html_cn=#{bbsHtmlCn}
+		    </if>
+		    <if test="bbsCn != null and bbsCn != ''">
+		      	, bbs_cn=#{bbsCn}
+		    </if>
+		</set>
+		WHERE 	bbs_post_no =#{bbsPostNo}
+	</update>
+	
+	<update id="editInquiryPost" parameterType="hashMap" >
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.editInquiryPost */
+		UPDATE  inquiry_post
+		<set>
+			<if test="inqTypeNo != null and inqTypeNo != ''">
+		    	inq_type_no=#{inqTypeNo}
+		    </if>
+		    <choose>
+		    	<when test="inqPswd != null and inqPswd !=''">
+			    	, inq_pswd =#{inqPswd}
+		    	</when>
+		    	<otherwise>
+		    		, inq_pswd = null
+		    	</otherwise>
+		    </choose>
+		    <if test="inqWriter != null and inqWriter != ''">
+		    	, inq_writer#{inqWriter}
+		    </if>
+		</set>
+		WHERE   bbs_post_no = #{bbsPostNo}
+	</update>
+	
+	<update id="deletePost" parameterType="int">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.deletePost */
+		UPDATE board_post
+		SET
+		       bbs_del_yn='Y'
+		WHERE
+		       bbs_post_no = #{bbsPostNo} 
+	</update>
+	
+	<insert id="createReplyPost" parameterType="hashmap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.createReplyPost */
+		INSERT INTO board_post (
+		    bbs_post_no
+		    , bbs_type_cd_no
+		    , bbs_title
+		    , bbs_cn
+		    , bbs_html_cn
+		    , art_group_no
+		    , parent_post_no
+		   	, file_group_no
+		) VALUES (
+			#{bbsPostNo}, #{bbsTypeCdNo}, #{bbsTitle}, #{bbsCn}, #{bbsHtmlCn}, #{artGroupNo}, #{parentPostNo}, #{fileGroupNo}
+		)
+	</insert>
+	<update id="ansYnUpdate" parameterType="int">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.ansYnUpdate */
+		UPDATE inquiry_post
+		SET
+		    ANS_YN = 'Y'
+		WHERE
+		    bbs_post_no = #{parentNo}
+	</update>
+	
+	<update id="editReply" parameterType="com.ohot.vo.BoardPostVO">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.editReply */
+		UPDATE board_post
+		SET
+		    bbs_title = #{bbsTitle}
+		    , bbs_cn = #{bbsCn}
+		    , bbs_html_cn = #{bbsHtmlCn}
+		    <if test="fileGroupNo!=null and fileGroupNo!=0">
+		    , file_group_no = #{fileGroupNo}
+		    </if>
+		WHERE
+		    bbs_post_no = #{bbsPostNo}
+	</update>
+	
+	<insert id="addReplyPswd" parameterType="map">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.addReplyPswd */
+		INSERT INTO inquiry_post (
+		    bbs_post_no
+		    , inq_pswd
+		    , ans_yn
+		) VALUES (
+		    #{bbsPostNo}, #{inqPswd}, null
+		)
+	</insert>
+	<update id="editReplyPswd" parameterType="hashmap">
+		/* com.ohot.home.inquiry.mapper.InquiryPostMapper.editReplyPswd */
+		UPDATE inquiry_post
+		SET
+		    inq_pswd = #{inqPswd}
+		WHERE
+		    bbs_post_no = #{bbsPostNo}
+	</update>
+	
+	<update id="deleteReplyPost" parameterType="hashmap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.deleteReplyPost */
+		UPDATE board_post
+		SET
+		    bbs_del_yn = 'Y'
+		WHERE
+		    bbs_post_no = #{bbsPostNo}
+	</update>
+	
+	<update id="deleteAnsYn" parameterType="hashmap">
+	/* com.ohot.home.inquiry.mapper.InquiryPostMapper.deleteAnsYn */
+		UPDATE inquiry_post
+		SET
+		    ans_yn = 'N'
+		WHERE
+		    bbs_post_no = #{parentPostNo}
+	</update>
+	
+	<update id="inqPswdReset" parameterType="hashmap">
+		/* com.ohot.home.inquiry.mapper.InquiryPostMapper.pswdReset */
+		UPDATE inquiry_post
+		SET
+		    INQ_PSWD=null
+		WHERE
+		    bbs_post_no = #{parentPostNo}
+	</update>
+	<delete id="replyPswdReset" parameterType="hashmap">
+		/* com.ohot.home.inquiry.mapper.InquiryPostMapper.pswdReset */
+		DELETE inquiry_post
+		WHERE  bbs_post_no = #{bbsPostNo}
+	</delete>
+	
+	<!-- ResultMap 모음 -->
+	<resultMap type="com.ohot.vo.BoardPostVO" id="boardPostMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="parentPostNo" column="PARENT_POST_NO"/>
+		<result property="bbsPostNo" column="BBS_POST_NO"/>
+		<result property="bbsTypeCdNo" column="BBS_TYPE_CD_NO"/>
+		<result property="bbsTitle" column="BBS_TITLE"/>
+		<result property="bbsCn" column="BBS_CN" jdbcType="CLOB" javaType="String"/>
+		<result property="bbsHtmlCn" column="BBS_HTML_CN" jdbcType="CLOB" javaType="String"/>
+		<result property="bbsRegDt" column="BBS_REG_DT"/>
+		<result property="displayDate" column="DISPLAY_DATE"/>
+		<result property="bbsRegYmd" column="BBS_REG_YMD"/>
+		<result property="bbsChgDt" column="BBS_CHG_DT"/>
+		<result property="bbsDelYn" column="BBS_DEL_YN"/>
+		<result property="bbsInqCnt" column="BBS_INQ_CNT"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="bbsNm" column="BBS_NM"/>
+		<association property="inquiryPostVO" resultMap="inquiryPostMap"></association>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	<resultMap type="com.ohot.home.inquiry.vo.InquiryPostVO" id="inquiryPostMap">
+		<result property="bbsPostNo" column="BBS_POST_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="inqWriter" column="INQ_WRITER"/>
+		<result property="ansYn" column="ANS_YN"/>
+		<result property="inqTypeNo" column="INQ_TYPE_NO"/>
+		<result property="inqPswd" column="INQ_PSWD"/>
+		<result property="inqTypeNm" column="INQ_TYPE_NM"/>
+		<association property="MemberVO" resultMap="memberMap"></association>
+	</resultMap>
+	<resultMap type="com.ohot.vo.MemberVO" id="memberMap">
+		<result property="memDelYn" column="MEM_DEL_YN"/>
+		<result property="snsMemYn" column="SNS_MEM_YN"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="memLastName" column="MEM_LAST_NAME"/>
+		<result property="memFirstName" column="MEM_FIRST_NAME"/>
+		<result property="memNicknm" column="MEM_NICKNM"/>
+		<result property="memEmail" column="MEM_EMAIL"/>
+		<result property="memTelno" column="MEM_TELNO"/>
+		<result property="memBirth" column="MEM_BIRTH"/>
+		<result property="memPswd" column="MEM_PSWD"/>
+		<result property="joinYmd" column="JOIN_YMD"/>
+		<result property="secsnYmd" column="SECSN_YMD"/>
+		<result property="memAccessToken" column="MEM_ACCESS_TOKEN"/>
+		<result property="enabled" column="ENABLED"/>
+		<result property="memStatSecCodeNo" column="MEM_STAT_SEC_CODE_NO"/>
+		<result property="memSecCodeNo" column="MEM_SEC_CODE_NO"/>
+	</resultMap>
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+</mapper>

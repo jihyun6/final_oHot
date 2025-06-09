@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.mapper.StatsMapper">
+
+	<!-- 
+	ex) 1번 아티스트의 2025년03월 일별통계
+	 -->
+	 <!-- 굿즈매출 리스트-->
+	<select id="statsList" resultType="com.ohot.vo.StatsVO">
+		 SELECT
+		    TO_CHAR(o.STLM_DT, 'YYYY-MM-DD') AS sale_date,
+		    SUM(od.amount) AS total_sale
+		FROM
+		    ORDERS_DETAILS od
+		INNER JOIN
+		    ORDERS o ON od.ORDER_NO = o.ORDER_NO
+		WHERE
+		    od.GDS_NO NOT IN (SELECT tk.GDS_NO FROM TICKET tk)
+		    AND o.STLM_DT &gt;= TRUNC(SYSDATE - 30)
+		GROUP BY
+		    TO_CHAR(o.STLM_DT, 'YYYY-MM-DD')
+		ORDER BY
+		    sale_date
+
+	</select> 
+	<!-- 이번달 신고현황 -->
+	<select id="listBarAjax" resultType="com.ohot.vo.StatsVO">
+		SELECT
+		    TO_CHAR(REPORT_REG_DT, 'YYYYMMDD') AS REPORT_REG_DT,
+		    COUNT(*) AS CNT2
+		FROM
+		    REPORT_BOARD_POST
+		WHERE
+		    REPORT_REG_DT &gt;= TRUNC(SYSDATE - 30)
+		GROUP BY
+		    TO_CHAR(REPORT_REG_DT, 'YYYYMMDD')
+		ORDER BY
+		    REPORT_REG_DT
+			</select>
+			
+			<!-- 이번달 티켓 굿즈 디엠 멤버십 유입수 퍼센트 -->
+			<select id="listdoughnutAjax" resultType="com.ohot.vo.StatsVO">
+				SELECT
+				    SUM(CASE WHEN b.TK_CTGR = '팬미팅' THEN a.qty * NVL(b.tk_vprice, 0) ELSE 0 END) AS totalCnts2,
+				    SUM(CASE WHEN b.TK_CTGR = '콘서트' THEN a.qty * NVL(b.tk_vprice, 0) ELSE 0 END) AS totalCnts1,
+				    SUM(CASE WHEN b.TK_CTGR NOT IN ('팬미팅', '콘서트') THEN a.qty * NVL(b.tk_vprice, 0) ELSE 0 END) AS totalCnts3
+				FROM
+				    ORDERS_DETAILS a
+				INNER JOIN
+				    ORDERS o ON a.ORDER_NO = o.ORDER_NO
+				LEFT JOIN
+				    TICKET b ON a.GDS_NO = b.GDS_NO
+				WHERE
+				    o.STLM_DT &gt;= TRUNC(SYSDATE) - 30
+				    AND b.tk_no IS NOT NULL
+
+	  </select>
+	  
+	  <!-- 신규가입 회원수 -->
+	<select id="memberTotal" resultType="com.ohot.vo.StatsVO">
+		SELECT SUM(CNT) AS TOTAL_CNT2
+		FROM (
+		    SELECT SUBSTR(JOIN_YMD, 1, 8) AS JOIN_YMD,
+		           COUNT(*) AS CNT
+		    FROM MEMBER
+		    WHERE TO_DATE(JOIN_YMD, 'YYYYMMDD') &gt;= TRUNC(SYSDATE) - 30
+		    GROUP BY SUBSTR(JOIN_YMD, 1, 8)
+		)
+
+	</select>
+	<!-- 판매수량 -->
+	<select id="salesVolume" resultType="com.ohot.vo.StatsVO">
+		 SELECT
+		    SUM(od.qty) AS TOTAL_QTY
+		FROM
+		    ORDERS_DETAILS od
+		INNER JOIN
+		    ORDERS o ON od.ORDER_NO = o.ORDER_NO
+		WHERE
+		    od.GDS_NO NOT IN (SELECT tk.GDS_NO FROM TICKET tk)
+		    AND o.STLM_DT &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') 
+		    AND o.STLM_DT &lt; TRUNC(SYSDATE, 'MM') 
+		  
+		  
+	</select>
+	<!-- 이번달 판매금액 -->
+	<select id="totalSales" resultType="com.ohot.vo.StatsVO">
+         SELECT
+		    TO_CHAR(SUM(od.amount), 'FM999,999,999') AS TOTAL_AMOUNT
+		FROM
+		    ORDERS_DETAILS od
+		INNER JOIN
+		    ORDERS o ON od.ORDER_NO = o.ORDER_NO
+		WHERE
+		    od.GDS_NO NOT IN (SELECT tk.GDS_NO FROM TICKET tk)
+		    AND o.STLM_DT &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')  
+		    AND o.STLM_DT &lt; TRUNC(SYSDATE, 'MM')  
+      </select>
+	
+	<!--이번달 DM 누적구독수-->
+	<select id="SubscriptionTotal" resultType="com.ohot.vo.StatsVO">
+		SELECT 
+		    COUNT(*) AS TOTAL_CNT
+		FROM 
+		    DM_SUB O
+		WHERE 
+		    TO_DATE(DM_STR_YMD, 'YYYYMMDD') &gt;= TRUNC(SYSDATE) - 30
+	</select>
+	
+	<!--이번달 멤버쉽 신규가입-->
+	<select id="FollowersTotal" resultType="com.ohot.vo.StatsVO">
+		SELECT 
+		    COUNT(*) AS TOTAL_CNT3
+		FROM 
+		    MEMBERSHIP O
+		WHERE 
+		    O.START_YMD &gt;= SYSDATE - 30
+	</select>
+	
+	<!-- 누적 커뮤니티 가입 -->
+	<select id="goodTotal" resultType="com.ohot.vo.StatsVO">
+		SELECT COUNT(*) AS totalCnt4
+		FROM COMMUNITY_PROFILE
+		WHERE TO_DATE(COM_JOIN_YMD, 'YYYYMMDD') &gt;= TRUNC(SYSDATE) - 30
+	</select>
+	
+	<select id="goodcnt" resultType="com.ohot.vo.StatsVO">
+		SELECT 
+		    COUNT(*) AS GOOD_CNT2
+		FROM 
+		    ORDERS O
+		WHERE 
+		    O.STLM_YN = 'Y'
+		    AND O.STLM_DT &gt;= TRUNC(SYSDATE, 'MM') 
+		    AND O.STLM_DT &lt; ADD_MONTHS(TRUNC(SYSDATE, 'MM'), 1)
+	</select>
+	
+	<select id="goodNm" resultType="com.ohot.vo.StatsVO">
+		SELECT
+		    G.GDS_NM AS GOOD_NM2
+		FROM
+		    GOODS G
+		WHERE
+		    G.GDS_DEL_YN = 'N'
+		    AND G.REG_DT &gt;= TRUNC(SYSDATE, 'MM')
+		    AND G.REG_DT &lt; ADD_MONTHS(TRUNC(SYSDATE, 'MM'), 1)
+		GROUP BY
+		    G.GDS_NM
+		ORDER BY
+		    SUM(G.QTY) DESC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+	
+	<!-- 
+	// 전체 글 수(검색 포함)
+	public int getTotal(Map<String, Object> map);
+	 -->
+	 <select id="pazing" parameterType="hashMap" resultType="int">
+	 	SELECT COUNT(*)
+		  FROM MEMBER
+		WHERE  1 = 1
+		<if test="keyword!=null and keyword!=''">
+			AND    MEM_LAST_NAME LIKE '%' || #{keyword} || '%'
+		</if>
+	 </select>
+	 
+	<!-- 회원가입 통계 -->	 
+	 <select id="listMemberAjax" resultType="com.ohot.vo.StatsVO">
+		SELECT SUBSTR(JOIN_YMD, 1, 8) JOIN_YMD
+		     , COUNT(*) MEMBER_CNT
+		FROM   MEMBER 
+		WHERE    SUBSTR(JOIN_YMD,1,6) = #{joinYmd}
+		GROUP BY SUBSTR(JOIN_YMD,1,8)
+		ORDER BY 1
+	</select>
+
+	
+	<!-- 아이돌 인기top6사진 업로드 -->
+	<select id="editPost" resultType="com.ohot.vo.StatsVO">
+        SELECT 
+		    ART.ARTIST_NAME,
+		    F.FILE_ORIGINAL_NAME,
+		    F.FILE_SAVE_NAME,
+		    F.FILE_SAVE_LOCATE,
+		    F.FILE_EXT
+		FROM (
+		    SELECT 
+		        A.ART_ACT_NM AS ARTIST_NAME,
+		        A.FILE_GROUP_NO,
+		        COUNT(D.DM_SUB_NO) AS SUB_COUNT
+		    FROM 
+		        ARTIST A
+		    JOIN 
+		        DM_SUB D ON A.ART_NO = D.ART_NO
+		    WHERE 
+		        A.ART_DEL_YN = 'N'
+		    GROUP BY 
+		        A.ART_ACT_NM, A.FILE_GROUP_NO
+		    ORDER BY 
+		        SUB_COUNT DESC
+		    FETCH FIRST 5 ROWS ONLY
+		) ART
+		LEFT JOIN (
+            SELECT ROW_NUMBER() OVER(PARTITION BY FILE_GROUP_NO ORDER BY FILE_GROUP_NO ASC) RNUM
+                , FILE_SN, FILE_GROUP_NO, FILE_ORIGINAL_NAME, FILE_SAVE_NAME, FILE_SAVE_LOCATE, FILE_SIZE, FILE_EXT, FILE_MIME, FILE_FANCYSIZE, FILE_SAVE_DATE, FILE_DOWNCOUNT
+            FROM FILE_DETAIL
+		) F ON ART.FILE_GROUP_NO = F.FILE_GROUP_NO AND RNUM = 1
+    </select>
+
+    <!-- 올해 예매통계 -->
+    <select id="listdoughnutAjax2" resultType="com.ohot.vo.StatsVO">
+		WITH S AS (
+    SELECT T.ORDER_NO
+         , TO_CHAR(T.STLM_DT, 'YYYY-MM-DD') SALE_DATE
+         , T.COMM_CODE_GRP_NO
+         , T.TK_CTGR
+         , T.GRAMT
+    FROM (
+        SELECT O.ORDER_NO
+             , NVL((SELECT NVL(G.COMM_CODE_GRP_NO, 'GD01') 
+                    FROM GOODS G 
+                    WHERE G.GDS_NO = (SELECT MAX(OD.GDS_NO) 
+                                      FROM ORDERS_DETAILS OD 
+                                      WHERE OD.ORDER_NO = O.ORDER_NO)
+                   ), 'GD01') COMM_CODE_GRP_NO
+             , (SELECT K.TK_CTGR 
+                FROM TICKET K 
+                WHERE K.GDS_NO = (SELECT MAX(OD2.GDS_NO) 
+                                  FROM ORDERS_DETAILS OD2 
+                                  WHERE OD2.ORDER_NO = O.ORDER_NO)
+               ) TK_CTGR
+             , O.STLM_DT
+             , O.GRAMT
+        FROM ORDERS O
+    ) T
+    WHERE T.COMM_CODE_GRP_NO = 'GD02'
+      AND T.STLM_DT &gt;= TRUNC(SYSDATE - 30)  -- 최근 30일 기준 (오늘 포함)
+      AND T.STLM_DT &lt; TRUNC(SYSDATE + 1)    -- 오늘까지 포함 (시간 제외)
+)
+SELECT S.SALE_DATE, SUM(S.GRAMT) AS TOTAL_REVENUE
+FROM S
+GROUP BY S.SALE_DATE
+ORDER BY S.SALE_DATE
+
+
+	</select>
+	<!-- 굿즈통계상세 -->
+		<select id="goodsStatistics" parameterType="hashMap" resultType="com.ohot.vo.StatsVO">
+		    WITH U AS (
+		        SELECT
+		            ROW_NUMBER() OVER (ORDER BY A.gds_no DESC) AS rnum,
+		            A.gds_no,
+		            A.gds_type,
+		            A.gds_nm,
+		            A.unit_price,
+		            NVL(order_stats.purchase_count, 0) AS productPurchases,
+		            A.reg_dt,
+		            A.art_group_no,
+		            B.art_group_nm,
+		            group_stats.product_count AS goodsNum,
+		            CASE
+		                WHEN group_stats.total_group_orders IS NULL OR group_stats.total_group_orders = 0 THEN 0
+		                ELSE ROUND(NVL(order_stats.purchase_count, 0) / group_stats.total_group_orders, 2)
+		            END AS competition
+		        FROM
+		            goods A
+		            LEFT JOIN artist_group B ON A.art_group_no = B.art_group_no
+		            LEFT JOIN (
+		                SELECT
+		                    gds_no,
+		                    COUNT(*) AS purchase_count
+		                FROM
+		                    orders_details
+		                GROUP BY
+		                    gds_no
+		            ) order_stats ON A.gds_no = order_stats.gds_no
+		            LEFT JOIN (
+		                SELECT
+		                    A.art_group_no,
+		                    COUNT(*) AS product_count,
+		                    SUM(NVL(order_stats2.purchase_count, 0)) AS total_group_orders
+		                FROM
+		                    goods A
+		                    LEFT JOIN (
+		                        SELECT
+		                            gds_no,
+		                            COUNT(*) AS purchase_count
+		                        FROM
+		                            orders_details
+		                        GROUP BY
+		                            gds_no
+		                    ) order_stats2 ON A.gds_no = order_stats2.gds_no
+		                GROUP BY
+		                    A.art_group_no
+		            ) group_stats ON A.art_group_no = group_stats.art_group_no
+		        WHERE 1 = 1
+		        <include refid="where" />
+		    )
+		    SELECT *
+		    FROM U
+		    WHERE rnum BETWEEN (#{currentPage} * 10) - (10 - 1)
+		                  AND (#{currentPage} * 10)
+		</select>
+     
+   	   <select id="getTotal" parameterType="hashMap" resultType="int">
+		    SELECT COUNT(*)
+		    FROM   goods A , orders_details B, artist_group C
+		    WHERE  1 = 1
+		    <include refid="where"></include>
+		</select>
+	   
+	   <sql id="where">
+		    <if test="keyword!=null and keyword!=''">
+		        AND    (GDS_NM LIKE '%' || #{keyword} || '%'
+		            OR  UNIT_PRICE     LIKE '%' || #{keyword} || '%')
+		    </if>
+		</sql>
+		
+		 <select id="topList" resultType="com.ohot.vo.StatsVO">
+		 	WITH ranked_goods AS (
+			    SELECT
+			        ROW_NUMBER() OVER (ORDER BY NVL(C.purchase_count, 0) DESC) AS rnum,
+			        A.gds_nm,
+			        B.art_group_nm
+			    FROM
+			        goods A
+			        JOIN artist_group B ON A.art_group_no = B.art_group_no
+			        LEFT JOIN (
+			            SELECT
+			                gds_no,
+			                COUNT(*) AS purchase_count
+			            FROM
+			                orders_details
+			            GROUP BY
+			                gds_no
+			        ) C ON A.gds_no = C.gds_no
+			)
+			SELECT *
+			FROM ranked_goods
+			WHERE rnum >= 1
+			ORDER BY rnum
+			FETCH FIRST 10 ROWS ONLY
+		 </select>
+		 
+	<select id="GoodsStatisticsAjax" resultType="com.ohot.vo.StatsVO">
+			SELECT TO_CHAR(REG_DT, 'YYYYMMDD') AS REG_DT,
+			       COUNT(*) AS CNT9
+			FROM   GOODS
+			WHERE  TO_CHAR(REG_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM')
+			GROUP BY TO_CHAR(REG_DT, 'YYYYMMDD')
+			ORDER BY REG_DT
+	    
+	</select>
+
+    <!-- 이번달 예매총매출 -->
+	<select id="reservationTotalSales" resultType="com.ohot.vo.StatsVO">
+		SELECT
+		    TO_CHAR(SUM(total_vprice_sales + total_rprice_sales + total_sprice_sales), 'FM999,999,999') AS reservation_total_sales
+		FROM (
+		    SELECT
+		        TO_CHAR(o.STLM_DT, 'YYYY-MM-DD') AS sale_date,
+		        SUM(CASE WHEN b.tk_vprice IS NOT NULL THEN a.qty * b.tk_vprice ELSE 0 END) AS total_vprice_sales,
+		        SUM(CASE WHEN b.tk_rprice IS NOT NULL THEN a.qty * b.tk_rprice ELSE 0 END) AS total_rprice_sales,
+		        SUM(CASE WHEN b.tk_sprice IS NOT NULL THEN a.qty * b.tk_sprice ELSE 0 END) AS total_sprice_sales
+		    FROM
+		        ORDERS_DETAILS a
+		    INNER JOIN
+		        ORDERS o ON a.ORDER_NO = o.ORDER_NO
+		    LEFT JOIN
+		        TICKET b ON a.GDS_NO = b.GDS_NO
+		    WHERE
+		        o.STLM_DT &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') 
+		        AND o.STLM_DT &lt; TRUNC(SYSDATE, 'MM')
+		        AND b.tk_no IS NOT NULL
+		    GROUP BY
+		        TO_CHAR(o.STLM_DT, 'YYYY-MM-DD')
+		)
+	</select>
+
+                        
+                        
+	<!-- 이번달 콘서트매출 -->
+	<select id="concertSales" resultType="com.ohot.vo.StatsVO">
+        SELECT
+		    TO_CHAR(SUM(total_vprice_sales), 'FM999,999,999') AS CONCERT_TOTAL_SALES
+		FROM (
+		    SELECT
+		        TO_CHAR(o.STLM_DT, 'YYYY-MM-DD') AS sale_date,
+		        SUM(CASE WHEN b.tk_vprice IS NOT NULL THEN a.qty * b.tk_vprice ELSE 0 END) AS total_vprice_sales
+		    FROM
+		        ORDERS_DETAILS a
+		    INNER JOIN
+		        ORDERS o ON a.ORDER_NO = o.ORDER_NO
+		    LEFT JOIN
+		        TICKET b ON a.GDS_NO = b.GDS_NO
+		    WHERE
+		        o.STLM_DT &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')  -- 지난 달 첫날
+		        AND o.STLM_DT &lt; TRUNC(SYSDATE, 'MM')  -- 현재 달 첫날
+		        AND b.tk_no IS NOT NULL
+		    GROUP BY
+		        TO_CHAR(o.STLM_DT, 'YYYY-MM-DD')
+		)
+    </select>
+	
+	<!-- 이번달 팬미팅매출 -->
+	<select id="fanSales" resultType="com.ohot.vo.StatsVO">
+        <![CDATA[
+    SELECT
+	    TO_CHAR(SUM(FANMEETING_TOTAL_SALES), 'FM999,999,999') AS FANMEETING_TOTAL_SALES
+	FROM (
+	    SELECT
+	        TO_CHAR(o.STLM_DT, 'YYYY-MM-DD') AS sale_date,
+	        SUM(CASE WHEN b.tk_rprice IS NOT NULL THEN a.qty * b.tk_rprice ELSE 0 END) AS FANMEETING_TOTAL_SALES
+	    FROM
+	        ORDERS_DETAILS a
+	    INNER JOIN
+	        ORDERS o ON a.ORDER_NO = o.ORDER_NO
+	    LEFT JOIN
+	        TICKET b ON a.GDS_NO = b.GDS_NO
+	    WHERE
+	        o.STLM_DT >= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') 
+	        AND o.STLM_DT < TRUNC(SYSDATE, 'MM') 
+	        AND b.tk_no IS NOT NULL
+	    GROUP BY
+	        TO_CHAR(o.STLM_DT, 'YYYY-MM-DD')
+)
+
+]]>
+
+    </select>
+    
+	<!-- 이번달 기타매출 -->
+	<select id="restSales" resultType="com.ohot.vo.StatsVO">
+        <![CDATA[
+    SELECT
+	    TO_CHAR(
+	        SUM(CASE WHEN b.tk_sprice IS NOT NULL THEN a.qty * b.tk_sprice ELSE 0 END),
+	        'FM999,999,999,999'
+	    ) AS ETC_TICKET_SALES
+	FROM
+	    ORDERS_DETAILS a
+	INNER JOIN
+	    ORDERS o ON a.ORDER_NO = o.ORDER_NO
+	LEFT JOIN
+	    TICKET b ON a.GDS_NO = b.GDS_NO
+	WHERE
+	    o.STLM_DT >= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')  -- 지난 달 첫날
+	    AND o.STLM_DT < TRUNC(SYSDATE, 'MM')  -- 현재 달 첫날
+	    AND b.tk_no IS NOT NULL
+
+		]]>
+
+    </select>
+    
+    <!-- 신고토탈 -->
+    <select id="reportTotal" resultType="com.ohot.vo.StatsVO">
+       SELECT 
+		    COUNT(*) AS REPORT_TOTAL_CNT
+		FROM 
+		    REPORT_BOARD_POST O
+		WHERE 
+		    O.REPORT_REG_DT &gt;= TRUNC(SYSDATE, 'MM')
+		    AND O.REPORT_REG_DT &lt; ADD_MONTHS(TRUNC(SYSDATE, 'MM'), 1)
+
+    </select>
+    
+    <!-- 커뮤니티통계 통계 
+    StatsVO(..startDate=2025-04-01, endDate=2025-05-31,..., startRow=1, endRow=10)
+    
+    TK_SPRICE : 좌석에 의한 통계
+    
+    총 매출
+    -->
+    <select id="subscriptionList" parameterType="com.ohot.vo.StatsVO" resultType="com.ohot.vo.StatsVO">
+       WITH S AS(
+		    SELECT TO_CHAR(T.STLM_DT,'YYYY-MM-DD') STLM_DT
+		         , T.GRAMT
+		    FROM
+		    (
+		        SELECT O.ORDER_NO
+		             , NVL((SELECT NVL(G.COMM_CODE_GRP_NO,'GD01') FROM GOODS G WHERE G.GDS_NO = (SELECT MAX(OD.GDS_NO) FROM ORDERS_DETAILS OD WHERE OD.ORDER_NO = O.ORDER_NO)),'GD01') COMM_CODE_GRP_NO
+		             , O.STLM_DT
+		             , O.GRAMT
+		        FROM   ORDERS O
+		    ) T
+		    WHERE T.COMM_CODE_GRP_NO = NVL(#{gubun},'GD01')
+		    <choose>
+		    	<when test="startDate!=null and startDate!=''">
+		    		<choose>
+		    			<when test="endDate!=null and endDate!=''">
+		    				AND   STLM_DT BETWEEN #{startDate} AND TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD')+1,'YYYY-MM-DD')
+		    			</when>
+		    			<otherwise>
+		    				AND   STLM_DT <![CDATA[>=]]> #{startDate}
+		    			</otherwise>
+		    		</choose>
+		    	</when>
+		    	<otherwise>
+		    		<if test="endDate!=null and endDate!=''">
+		    			AND   STLM_DT <![CDATA[<=]]> TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD')+1,'YYYY-MM-DD')
+		    		</if>
+		    	</otherwise>
+		    </choose>
+		)
+		SELECT S.STLM_DT AS SALE_DATE, SUM(S.GRAMT) TOTAL_REVENUE
+		FROM   S
+		GROUP BY S.STLM_DT
+		ORDER BY 1
+    </select>
+    
+    <!-- 커뮤니티통계 통계 -> 2) 티켓예매 매출(*)
+		총매출, 콘서트, 팬미팅, 기타 매출 
+    	StatsVO(..startDate=2025-04-01, endDate=2025-05-31,..., startRow=1, endRow=10)
+    -->
+    <select id="subscriptionStatList" parameterType="com.ohot.vo.StatsVO" resultType="hashMap">
+       WITH S AS(
+		    SELECT T.ORDER_NO
+		         , TO_CHAR(T.STLM_DT,'YYYY-MM-DD') STLM_DT
+		         , T.COMM_CODE_GRP_NO
+		         , T.TK_CTGR
+		         , T.GRAMT
+		    FROM
+		    (
+		        SELECT O.ORDER_NO
+		             , NVL((SELECT NVL(G.COMM_CODE_GRP_NO,'GD01') FROM GOODS G WHERE G.GDS_NO = (SELECT MAX(OD.GDS_NO) FROM ORDERS_DETAILS OD WHERE OD.ORDER_NO = O.ORDER_NO)),'GD01') COMM_CODE_GRP_NO
+		             , (SELECT K.TK_CTGR FROM TICKET K WHERE K.GDS_NO = (SELECT MAX(OD2.GDS_NO) FROM ORDERS_DETAILS OD2 WHERE OD2.ORDER_NO = O.ORDER_NO)) TK_CTGR
+		             , O.STLM_DT
+		             , O.GRAMT
+		        FROM   ORDERS O
+		    ) T
+		    WHERE T.COMM_CODE_GRP_NO = 'GD02'
+		    <choose>
+		    	<when test="startDate!=null and startDate!=''">
+		    		<choose>
+		    			<when test="endDate!=null and endDate!=''">
+		    				AND   T.STLM_DT BETWEEN #{startDate} AND TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD')+1,'YYYY-MM-DD')
+		    			</when>
+		    			<otherwise>
+		    				AND   T.STLM_DT <![CDATA[>=]]> #{startDate}
+		    			</otherwise>
+		    		</choose>
+		    	</when>
+		    	<otherwise>
+		    		<if test="endDate!=null and endDate!=''">
+		    			AND   T.STLM_DT <![CDATA[<=]]> TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD')+1,'YYYY-MM-DD')
+		    		</if>
+		    	</otherwise>
+		    </choose>
+		)
+		SELECT S.TK_CTGR, SUM(GRAMT) GRAMT 
+		FROM   S
+		GROUP BY S.TK_CTGR
+    </select>
+     <select id="subscriptionList2" resultType="com.ohot.vo.StatsVO">
+     	SELECT 
+		    CASE 
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 0 AND 19 THEN '10대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 20 AND 29 THEN '20대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 30 AND 39 THEN '30대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 40 AND 49 THEN '40대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 50 AND 59 THEN '50대'
+		        ELSE '기타' 
+		    END AS age_group,
+		    COUNT(O.ORDER_NO) AS purchase_count2
+		FROM 
+		    ORDERS O
+		JOIN 
+		    MEMBER M ON O.MEM_NO = M.MEM_NO
+		GROUP BY 
+		    CASE 
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 0 AND 19 THEN '10대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 20 AND 29 THEN '20대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 30 AND 39 THEN '30대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 40 AND 49 THEN '40대'
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, M.MEM_BIRTH) / 12) BETWEEN 50 AND 59 THEN '50대'
+		        ELSE '기타' 
+		    END
+		ORDER BY 
+		    age_group
+     </select>
+     
+    
+     <select id="getTotalSalesByPeriod" parameterType="map" resultType="String">
+		 SELECT TO_CHAR(SUM(total_vprice_sales + total_rprice_sales + total_sprice_sales), 'FM999,999,999') AS reservation_total_sales1
+    FROM (
+        SELECT
+            TO_CHAR(o.STLM_DT, 'YYYY-MM-DD') AS sale_date,
+            SUM(CASE WHEN b.tk_vprice IS NOT NULL THEN a.qty * b.tk_vprice ELSE 0 END) AS total_vprice_sales,
+            SUM(CASE WHEN b.tk_rprice IS NOT NULL THEN a.qty * b.tk_rprice ELSE 0 END) AS total_rprice_sales,
+            SUM(CASE WHEN b.tk_sprice IS NOT NULL THEN a.qty * b.tk_sprice ELSE 0 END) AS total_sprice_sales
+        FROM ORDERS_DETAILS a
+        INNER JOIN ORDERS o ON a.ORDER_NO = o.ORDER_NO
+        LEFT JOIN TICKET b ON a.GDS_NO = b.GDS_NO
+        WHERE TO_CHAR(o.STLM_DT, 'YYYY-MM-DD') IN (
+            SELECT sale_date FROM (
+                SELECT DISTINCT TO_CHAR(o2.STLM_DT, 'YYYY-MM-DD') AS sale_date,
+                       ROW_NUMBER() OVER (ORDER BY TO_CHAR(o2.STLM_DT, 'YYYY-MM-DD')) AS rn
+                FROM ORDERS o2
+                <where>
+                    <if test="startDate != null and startDate != ''">
+                        AND o2.STLM_DT &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                    </if>
+                    <if test="endDate != null and endDate != ''">
+                        AND o2.STLM_DT &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+                    </if>
+                </where>
+            ) WHERE rn BETWEEN #{startRow} AND #{endRow}
+        )
+        AND b.tk_no IS NOT NULL
+        GROUP BY TO_CHAR(o.STLM_DT, 'YYYY-MM-DD')
+    )
+	</select>
+</mapper>

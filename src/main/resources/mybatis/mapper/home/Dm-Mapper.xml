@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.dm.mapper.DmMapper">
+
+	<update id="updateReadY" parameterType="long">
+		UPDATE dm_msg
+		SET msg_read_yn ='Y'
+		WHERE dm_sub_no =#{dmSubNo}
+	</update>
+
+	<select id="dmsearchFilter"  resultMap="artistGroupMap">
+		SELECT
+		    	ag.art_group_no,
+		    	ag.art_group_nm,
+		    	a.art_no,
+		    	a.art_act_nm,
+		    	f.file_save_locate
+		FROM artist_group ag
+		LEFT OUTER JOIN ARTIST a on(a.art_group_no = ag.art_group_no)
+		LEFT OUTER JOIN (
+							SELECT file_group_no, file_save_locate
+						    FROM (
+						    	    SELECT 
+							            file_group_no, 
+							            file_save_locate,
+							            ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS rn
+							        FROM file_detail
+							    )
+						    WHERE rn = 1
+						  ) f ON a.file_group_no = f.file_group_no
+		WHERE 1=1
+		<if test="artGroupNo !=null and artGroupNo !=0 and artGroupNo !='' ">
+			AND ag.art_group_no =#{artGroupNo}
+		</if>
+		<if test="dmSrhKeyword !=null and dmSrhKeyword !='' ">
+			AND LOWER(ag.art_group_nm)  like '%'||LOWER(#{dmSrhKeyword})||'%'
+		</if>
+		AND a.art_no >=1
+		AND ag.art_group_del_yn='N'
+		ORDER BY ag.art_group_no
+	</select>
+	
+	<select id="lastChatForArt" parameterType="com.ohot.home.dm.vo.DmMsgVO" resultType="com.ohot.home.dm.vo.DmMsgVO">
+		SELECT *
+		FROM (
+		    SELECT 
+		        DBMS_LOB.SUBSTR(msg_content, 4000) AS msg_content,
+		        msg_sndr_no,
+		        (SELECT M.MEM_FIRST_NAME
+                        FROM MEMBER M
+                        WHERE M.MEM_NO=MSG_SNDR_NO) AS MEM_FIRST_NAME,
+		        file_group_no,
+		        art_no,
+		        msg_dt,
+		        msg_no,
+		        TO_CHAR(msg_dt, 'MM/DD HH24:MI') AS msg_dt_str,
+		        ROW_NUMBER() OVER (ORDER BY msg_dt DESC) AS rn
+		    FROM (
+		        SELECT 
+		            msg_content,
+		            msg_sndr_no,
+		            (SELECT M.MEM_FIRST_NAME
+                        FROM MEMBER M
+                        WHERE M.MEM_NO=MSG_SNDR_NO) AS MEM_FIRST_NAME,
+		            file_group_no,
+		            art_no,
+		            msg_dt,
+		            msg_no
+		        FROM (
+		            SELECT 
+		                msg_content,
+		                msg_sndr_no,
+		                (SELECT M.MEM_FIRST_NAME
+                        FROM MEMBER M
+                        WHERE M.MEM_NO=MSG_SNDR_NO) AS MEM_FIRST_NAME,
+		                file_group_no,
+		                art_no,
+		                msg_dt,
+		                msg_no,
+		                ROW_NUMBER() OVER (
+		                    PARTITION BY DBMS_LOB.SUBSTR(msg_content, 4000) 
+		                    ORDER BY msg_dt
+		                ) AS inner_rn
+		            FROM dm_msg
+		            WHERE art_no = #{artNo}
+		        )
+		        WHERE inner_rn = 1
+		    )
+		)
+		WHERE rn BETWEEN #{start} AND #{end}
+		ORDER BY rn
+
+	</select>
+
+	<select id="lastChat" parameterType="com.ohot.home.dm.vo.DmMsgVO" resultType="com.ohot.home.dm.vo.DmMsgVO">
+		SELECT *
+		FROM (SELECT
+					msg_content
+					, msg_sndr_no
+					,(SELECT M.MEM_FIRST_NAME
+                        FROM MEMBER M
+                        WHERE M.MEM_NO=MSG_SNDR_NO) AS MEM_FIRST_NAME
+					,file_group_no
+					,art_no
+					,TO_CHAR(msg_dt,'MM/DD HH24:MI') AS msg_dt_str
+					,msg_no
+					,ROW_NUMBER() OVER (ORDER BY msg_dt DESC) AS rn
+			FROM dm_msg
+			WHERE 1=1
+			AND dm_sub_no=#{dmSubNo})
+		WHERE rn BETWEEN #{start} AND #{end}
+		ORDER BY rn
+	</select>
+
+	<select id="myFanList" parameterType="int" resultType="com.ohot.home.dm.vo.DmSubVO">
+		SELECT dm_sub_no
+		FROM dm_sub
+		WHERE art_no=#{artNo}
+	</select>
+
+	<insert id="saveMsg" parameterType="com.ohot.home.dm.vo.DmMsgVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="msgNo">
+	        SELECT msg_seq.NEXTVAL FROM dual
+	    </selectKey>
+		INSERT INTO dm_msg(
+							msg_no
+							,msg_content
+							,msg_dt
+							,msg_read_yn
+							,file_group_no
+							,msg_sndr_no
+							,dm_sub_no
+							,art_no				
+						)
+		VALUES (
+				#{msgNo}
+				,#{msgContent}
+				,SYSDATE
+				,'N'
+				,#{fileGroupNo}
+				,#{msgSndrNo}
+				,#{dmSubNo}
+				,#{artNo}
+		)
+	</insert>
+
+	<update id="resetExpiredDms">
+	<!-- com.ohot.home.dm.mapper.DmMapper.resetExpiredDm 만료된 dm구독권 정지처리 -->
+		UPDATE DM_SUB
+		SET dm_fin_yn ='Y'
+		WHERE 1=1
+		AND dm_fin_yn ='N'
+		AND TO_DATE(dm_fin_ymd, 'YYYYMMDD') &lt; TRUNC(SYSDATE)
+	</update>
+	
+	<select id="checkPurchaseDm" parameterType="com.ohot.home.dm.vo.DmSubVO" resultType="com.ohot.home.dm.vo.DmSubVO">
+	<!-- com.ohot.home.dm.mapper.DmMapper.checkPurchaseDm  -->
+		SELECT 
+			ds.dm_sub_no
+			, ds.dm_fin_ymd
+			, ds.art_no
+			, (select count(dm.MSG_READ_YN)
+                from dm_msg dm
+                where dm.dm_sub_no = ds.dm_sub_no
+                and dm.MSG_READ_YN ='N') as not_read_cnt
+			, (
+		        SELECT file_save_locate
+		        FROM (
+		            SELECT fd.file_save_locate
+		            FROM file_detail fd
+		            JOIN artist a ON fd.file_group_no = a.file_group_no
+		            WHERE a.art_no = ds.art_no
+		            ORDER BY fd.file_sn DESC
+		        )
+		        WHERE ROWNUM = 1
+		    ) AS file_save_locate
+		FROM dm_sub ds
+		WHERE 1=1
+		AND ds.mem_no=#{memNo}
+		AND ds.dm_fin_yn='N'
+		<if test="artNo != null and artNo != ''">
+			AND ds.art_no = #{artNo}
+		</if>
+	</select>
+
+	<insert id="dmSubInsert" parameterType="com.ohot.home.dm.vo.DmSubVO">
+		INSERT INTO dm_sub (
+							dm_sub_no
+							, dm_str_ymd
+							, dm_fin_ymd
+							, dm_fin_yn
+							, mem_no
+							, art_no)
+		VALUES(
+				#{dmSubNo}
+				, #{dmStrYmd}
+				, #{dmFinYmd}
+				,'N'
+				, #{memNo}
+				, #{artNo})
+	</insert>
+	<select id="artGroupList" resultMap="artistGroupMap" parameterType="int">
+		SELECT
+		    	ag.art_group_no,
+		    	ag.art_group_nm,
+		    	a.art_no,
+		    	a.art_act_nm,
+		    	f.file_save_locate
+		FROM artist_group ag
+		LEFT OUTER JOIN ARTIST a on(a.art_group_no = ag.art_group_no)
+		LEFT OUTER JOIN (
+							SELECT file_group_no, file_save_locate
+						    FROM (
+						    	    SELECT 
+							            file_group_no, 
+							            file_save_locate,
+							            ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS rn
+							        FROM file_detail
+							    )
+						    WHERE rn = 1
+						  ) f ON a.file_group_no = f.file_group_no
+		WHERE 1=1
+		AND ag.art_group_no >=1
+		AND a.art_no >=1
+		AND ag.art_group_del_yn='N'
+		AND ag.art_group_no NOT IN (
+							        SELECT cp.art_group_no
+							        FROM community_profile cp
+							        WHERE cp.mem_no = #{memNo}
+							        AND cp.com_delyn='N'
+							    )
+		ORDER BY ag.art_group_no
+	</select>
+	
+	<select id="myArtistList" resultMap="artistGroupMap" parameterType="int">
+		SELECT
+		    	ag.art_group_no,
+		    	ag.art_group_nm,
+		    	a.art_no,
+		    	a.art_act_nm,
+		    	f.file_save_locate
+		FROM artist_group ag
+		LEFT OUTER JOIN ARTIST a on(a.art_group_no = ag.art_group_no)
+		LEFT OUTER JOIN (
+							SELECT file_group_no, file_save_locate
+						    FROM (
+						    	    SELECT 
+							            file_group_no, 
+							            file_save_locate,
+							            ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS rn
+							        FROM file_detail
+							    )
+						    WHERE rn = 1
+						  ) f ON a.file_group_no = f.file_group_no
+		WHERE 1=1
+		AND ag.art_group_no >=1
+		AND a.art_no >=1
+		AND ag.art_group_del_yn='N'
+		AND ag.art_group_no IN (
+							        SELECT cp.art_group_no
+							        FROM community_profile cp
+							        WHERE cp.mem_no = #{memNo}
+							        AND cp.com_delyn='N'
+							        AND cp.com_auth = 'ROLE_MEM'
+							    )
+		ORDER BY ag.art_group_no
+	</select>
+	
+	<select id="getGdsNoAfterY" parameterType="int" resultType="int">
+		SELECT MAX(gds_no) AS gds_no
+		FROM orders_details
+		WHERE 1=1
+		AND order_no=#{order_no}
+	</select>
+	
+	<resultMap type="com.ohot.vo.ArtistGroupVO" id="artistGroupMap">
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupDebutYmd" column="ART_GROUP_DEBUT_YMD"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupNmKo" column="ART_GROUP_NM_KO"/>
+		<result property="artGroupExpln" column="ART_GROUP_EXPLN"/>
+		<result property="artGroupRegYmd" column="ART_GROUP_REG_YMD"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="logoFileGroupNo" column="LOGO_FILE_GROUP_NO"/>
+		<collection property="artistVOList" resultMap="artistMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.ArtistVO" id="artistMap">
+		<result property="artDelYn" column="ART_DEL_YN"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="artExpln" column="ART_EXPLN"/>
+		<result property="artRegYmd" column="ART_REG_YMD"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="memNo" column="MEM_NO"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.home.community.vo.CommunityProfileVO" id="communityProfileMap">
+		<result property="membershipYn" column="MEMBERSHIP_YN"/>
+		<result property="comProfileNo" column="COM_PROFILE_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="comNm" column="COM_NM"/>
+		<result property="comFileGroupNo" column="COM_FILE_GROUP_NO"/>
+		<result property="comJoinYmd" column="COM_JOIN_YMD"/>
+		<result property="comDelyn" column="COM_DELYN"/>
+		<result property="comAuth" column="COM_AUTH"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<association property="artistGroupVO" resultMap="artistGroupMap"></association>
+	</resultMap>
+
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.mapper.MypageMapper">
+
+	<select id="NickName" resultType="com.ohot.vo.MemberVO">
+		    SELECT MEM_NICKNM
+		    FROM MEMBER
+		    WHERE MEM_EMAIL = #{memEmail}
+	
+	</select>
+	
+	<select id="Email" resultType="com.ohot.vo.MemberVO">
+		     SELECT MEM_NO, MEM_EMAIL, MEM_LAST_NAME, MEM_PSWD, MEM_BIRTH
+		    FROM MEMBER
+		    WHERE MEM_EMAIL = #{memEmail}
+	</select>
+	
+	<!--web에서 이메일 변경한 것을 DB Update
+	public int updateEmail(MemberVO memberVO) 
+	 -->
+	<update id="updateEmail" parameterType="com.ohot.vo.MemberVO">
+		UPDATE MEMBER 
+		SET    MEM_EMAIL = #{memEmail}
+		WHERE  MEM_NO = #{memNo}
+	</update>
+	
+	<update id="updateNick" parameterType="com.ohot.vo.MemberVO">
+		UPDATE MEMBER 
+		SET    MEM_NICKNM = #{memNicknm}
+		WHERE  MEM_NO = #{memNo}
+	</update>
+	
+	<select id="name" resultType="com.ohot.vo.MemberVO">
+		     SELECT MEM_LAST_NAME, MEM_PSWD, MEM_BIRTH
+		    FROM MEMBER
+		    WHERE MEM_EMAIL = #{memEmail}
+	</select>
+	
+	<select id="birth" resultType="com.ohot.vo.MemberVO">
+		     SELECT MEM_BIRTH
+		    FROM MEMBER
+		    WHERE MEM_EMAIL = #{memEmail}
+	</select>
+</mapper>

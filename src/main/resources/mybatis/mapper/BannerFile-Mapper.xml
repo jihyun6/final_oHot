@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 매퍼interface의 풀경로명을 매퍼XML의 namespace속성의 값으로 쓰면 둘이 연결됨 -->
+<mapper namespace="com.ohot.mapper.BannerFileMapper">
+	
+	<!-- bannerFileVO -->
+	<resultMap type="com.ohot.vo.BannerFileVO" id="bannerFileMap">
+		<result property="bannerLink" column="BANNER_LINK"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="displayOrder" column="DISPLAY_ORDER"/>
+		<result property="bannerNo" column="BANNER_NO"/>
+		<result property="taskSeNm" column="TASK_SE_NM"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<!-- bannerFileVO : FILE_GROUP = 1 : 1 -->
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<!-- FILE_GROUP : FILE_DETAIL = 1 : N -->
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<!-- 업무유형별로 bannerFile List 반환 -->	
+	<select id="bannerFileList" parameterType="string" resultType="com.ohot.vo.BannerFileVO" resultMap="bannerFileMap">
+		/* com.ohot.mapper.BannerFileMapper.bannerFileList  */
+		SELECT a.banner_no
+		     , a.task_se_nm
+		     , a.file_group_no
+		     , a.banner_link
+		     , a.use_yn
+		     , a.display_order
+		     , b.file_regdate
+		     , c.file_sn
+		     , c.file_original_name
+		     , c.file_save_name
+		     , c.file_save_locate
+		     , c.file_size
+		     , c.file_ext
+		     , c.file_mime
+		     , c.file_fancysize
+		     , c.file_save_date
+		     , c.file_downcount
+  		  FROM BANNER_FILE A INNER JOIN FILE_GROUP B ON (A.FILE_GROUP_NO = B.FILE_GROUP_NO)
+                     		 INNER JOIN FILE_DETAIL C ON (B.FILE_GROUP_NO = C.FILE_GROUP_NO)
+		  WHERE a.task_se_nm = #{taskSeNm}
+	</select>
+</mapper>

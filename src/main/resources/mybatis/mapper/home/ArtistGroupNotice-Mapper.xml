@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.community.mapper.ArtistGroupNoticeMapper">
+
+<select id="artistGroupNoticeList" parameterType="hashMap" resultType="com.ohot.home.community.vo.ArtistGroupNoticeVO">
+		SELECT S.*
+		FROM
+		(
+		SELECT ROW_NUMBER() OVER(ORDER BY T.RNUM ASC) AS RRNUM
+				,T.*
+		FROM
+		(
+            SELECT
+                 a.bbs_post_no
+                ,a.bbs_type_cd_no
+                ,a.bbs_title
+                ,a.bbs_cn
+                ,TO_CHAR(a.bbs_reg_dt,'yyyy-mm-dd') as bbs_reg_dt2
+                ,a.bbs_reg_dt
+                ,ROW_NUMBER() OVER(ORDER BY A.bbs_post_no DESC) AS RNUM
+                ,a.bbs_chg_dt
+                ,a.bbs_del_yn
+                ,a.bbs_inq_cnt
+                ,a.art_group_no
+                ,a.file_group_no
+                ,a.parent_post_no
+            FROM
+                board_post a
+            WHERE
+                a.art_group_no = #{artGroupNo}
+			AND BBS_DEL_YN = 'N'
+			
+			    
+		)T
+	)S
+		WHERE S.RNUM BETWEEN (#{currentPage} * 10) -(10 - 1) AND (#{currentPage} * 10) 
+</select>
+
+<select id="getTotal">
+	SELECT COUNT(*)
+	FROM BOARD_POST
+	WHERE ART_GROUP_NO =#{artGroupNo}
+</select>
+<select id="newNoticeList" parameterType="int" resultType="com.ohot.home.community.vo.ArtistGroupNoticeVO">
+	SELECT BBS_POST_NO, BBS_TYPE_CD_NO, BBS_TITLE, BBS_CN,TO_CHAR(bbs_reg_dt,'yyyy-mm-dd') as bbs_reg_dt2, BBS_CHG_DT, BBS_DEL_YN, BBS_INQ_CNT, ART_GROUP_NO, FILE_GROUP_NO, PARENT_POST_NO
+	FROM BOARD_POST
+	WHERE ART_GROUP_NO = #{artGroupNo}
+	AND TO_CHAR(BBS_REG_DT,'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD')
+	AND BBS_DEL_YN = 'N'
+	
+</select>
+
+<select id="artGroupInfo" parameterType="int" resultType="com.ohot.vo.ArtistGroupVO">
+	SELECT
+	    art_group_no
+	    ,art_group_debut_ymd
+	    ,art_group_nm
+	    ,art_group_nm_ko
+	    ,art_group_expln
+	    ,art_group_reg_ymd
+	    ,art_group_del_yn
+	    ,file_group_no
+	    ,logo_file_group_no
+	FROM
+	    artist_group
+	WHERE
+	    art_group_no = #{artGroupNo}
+</select>
+
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 매퍼interface의 풀경로명을 매퍼XML의 namespace속성의 값으로 쓰면 둘이 연결됨 -->
+<mapper namespace="com.ohot.mapper.SeqGeneratorMapper">
+	<!-- 업무 유형별로 SeqGeneratorVO값을 반환 -->
+	<select id="findSeqGenerator" parameterType="com.ohot.vo.SeqGeneratorVO" resultType="com.ohot.vo.SeqGeneratorVO">
+		SELECT TASK_SE_NM
+		     , CRTR_YMD
+		     , REQ_SN
+   		  FROM SEQ_GENERATOR
+		 WHERE CRTR_YMD = TO_CHAR(SYSDATE,'YYYYMMDD') AND TASK_SE_NM = #{taskSeNm}
+	</select>
+	
+	<!-- 업무유형별로 순번 증가 -->
+	<update id="incrementSeqGenerator" parameterType="com.ohot.vo.SeqGeneratorVO">
+		UPDATE SEQ_GENERATOR
+		   SET REQ_SN = REQ_SN+1 
+		 WHERE CRTR_YMD = TO_CHAR(SYSDATE,'YYYYMMDD') AND TASK_SE_NM = #{taskSeNm}
+	</update>
+	
+	<!-- 업무유형별로 오늘 날짜에 대한 행이 없는 경우 오늘날짜, 순번 설정 -->
+	<update id="updateSeqGeneratorDate" parameterType="com.ohot.vo.SeqGeneratorVO">
+		UPDATE SEQ_GENERATOR
+		   SET CRTR_YMD = TO_CHAR(SYSDATE,'YYYYMMDD')
+		     , REQ_SN = 1
+		 WHERE TASK_SE_NM = #{taskSeNm}
+	</update>
+</mapper>

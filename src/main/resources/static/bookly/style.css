@@ -1,0 +1,81 @@
+/*
+Theme Name: Bookly
+Theme URI: https://templatejungle.com/
+Author: TemplatesJungle
+Author URI: https://templatesjungle.com/
+Description: Bookly - Bookstore eCommerce Bootstrap 5 HTML CSS Website Template
+Version: 1.1
+*/
+
+/*--------------------------------------------------------------
+This is main CSS file that contains custom style rules used in this template
+--------------------------------------------------------------*/
+
+/*------------------------------------*\
+    Table of contents
+\*------------------------------------*/
+
+/*------------------------------------------------
+
+CSS STRUCTURE:
+1. VARIABLES
+
+2. GENERAL TYPOGRAPHY
+  2.1 General Styles
+  2.2 Section Title
+  2.3 Buttons
+
+3. CONTENT ELEMENTS
+  3.1 Form Control
+  3.2 Form Select
+  3.3 Table
+  3.4 Pagination
+  3.5 Slash Divider
+
+4. SITE STRUCTURE
+  4.1 Header
+  4.2 Billboard
+  4.3 Icon Box - Company Services
+  4.4 Product
+  4.5 Items Listings
+  4.6 Testimonial
+  4.7 Brands
+  4.8 Instagram
+  4.9 Footer
+
+5. OTHER PAGES
+  5.1 Single Product Page
+    - Product Tabs
+
+/* 2.1 General Styles
+/*----------------------------------------------*/
+a:hover {
+  text-decoration: none;
+  color: pink !important;
+}
+
+/*--------------------------------------------------------------
+/** 2.3 Buttons
+--------------------------------------------------------------*/
+.btnBookly {
+	background-color: #F86D72 !important; /* 버튼 배경 색상 */
+    color: white; /* 버튼 텍스트 색상 */
+    border-radius: 30px; /* 버튼 모서리 둥글게 */
+    padding: 12px 24px; /* 패딩으로 크기 조정 */
+    font-size: 16px; /* 텍스트 크기 */
+    text-decoration: none; /* 밑줄 없애기 */
+}
+
+/*------------ Offcanvas -------------- */
+#header-nav .navbar-toggler:focus {
+  box-shadow: none;
+}
+#header-nav .offcanvas {
+  transition: 0.5s ease-in-out;
+}
+#header-nav .offcanvas.show {
+  z-index: 99999;
+}
+#header-nav .offcanvas-end {
+  width: 500px;
+}

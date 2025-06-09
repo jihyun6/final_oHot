@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.shop.mapper.PaymentMapper">
+	<insert id="ordersInsert" parameterType="com.ohot.shop.vo.OrdersVO">
+		INSERT INTO orders (
+			   order_no	
+		     , mem_no
+		     , gramt
+		     , stlm_yn
+		     , stlm_dt
+		     , shipping_info_no
+		     , order_pay_no
+		) VALUES (
+			   #{orderNo}
+		     , #{memNo}
+		     , #{gramt}
+		     , #{stlmYn}
+		     , SYSDATE
+		     , #{shippingInfoNo}
+		     , #{orderPayNo}
+		)
+	</insert>
+	
+	<insert id="ordersDetailInsert" parameterType="com.ohot.shop.vo.OrdersVO" >
+		<foreach collection="ordersDetailsVOList" item="ordersDetailsVO" open="INSERT ALL" close="SELECT * FROM DUAL" separator=" " index="idx" >
+			INTO ORDERS_DETAILS(
+				   gds_no
+			   	 , order_no
+			   	 , seq
+			   	 , qty
+			   	 , amount
+			   	 , option1
+			   	 , option2
+			) VALUES (	  
+				   #{ordersDetailsVO.gdsNo}
+				 , #{ordersDetailsVO.orderNo}
+				 , #{ordersDetailsVO.seq}
+				 , #{ordersDetailsVO.qty} 
+				 , #{ordersDetailsVO.amount}
+				 , #{ordersDetailsVO.option1}
+				 , #{ordersDetailsVO.option2}
+			)
+		</foreach>
+	</insert>
+	
+	<select id="ordersDetailSelect" parameterType="int" resultType="com.ohot.home.dm.vo.DmSubVO">
+		SELECT 
+				TO_NUMBER(od.option2 || o.order_no) AS dm_sub_no
+				, o.mem_no
+				, TO_CHAR(o.stlm_dt,'YYYYMMDD') AS dm_str_ymd
+                , TO_CHAR(o.stlm_dt+30,'YYYYMMDD') AS dm_fin_ymd
+				, od.option2 AS art_no
+		  FROM  ORDERS o
+		  LEFT OUTER JOIN ORDERS_DETAILS od ON(o.order_no = od.order_no)
+	 	 WHERE 1=1
+	 	   AND o.order_no=#{orderNo}
+	</select>
+	
+	<!-- 회원의 주문번호 마지막을 가져오는 메소드 -->
+	<select id="getLatestOrder" parameterType="com.ohot.vo.UsersVO" resultType="com.ohot.shop.vo.OrdersVO">
+		SELECT ORDER_NO
+		     , MEM_NO
+		     , GRAMT
+		     , STLM_YN
+		     , STLM_DT
+		     , SHIPPING_INFO_NO
+		  FROM ORDERS
+		 WHERE ORDER_NO = (SELECT ORDER_NO
+  							 FROM ( SELECT ORDER_NO
+  							 			 , MEM_NO
+  							 			 , GRAMT
+  							 			 , STLM_YN
+  							 			 , SHIPPING_INFO_NO
+  							 			 , STLM_DT
+  									  FROM ORDERS
+									 WHERE MEM_NO = #{userNo}
+								  ORDER BY STLM_DT DESC)
+							WHERE ROWNUM = 1)
+	</select>
+	
+	<!-- COM_PROFILE_NO 조회 -->
+	<select id="findComProfileNo" parameterType="com.ohot.shop.vo.MemberShopVO" resultType="com.ohot.home.community.vo.CommunityProfileVO">
+		SELECT COM_PROFILE_NO
+			 , MEM_NO
+			 , COM_NM
+			 , COM_FILE_GROUP_NO
+			 , COM_JOIN_YMD
+			 , COM_DELYN
+			 , COM_AUTH
+			 , ART_GROUP_NO
+  		  FROM COMMUNITY_PROFILE
+		 WHERE MEM_NO = #{memNo} AND ART_GROUP_NO = (SELECT ART_GROUP_NO 
+		 											   FROM GOODS 
+		 											  WHERE GDS_NO = #{gdsNo} )
+		 						 AND com_delyn = 'N'
+	</select>
+	
+	<!-- MemberShip Insert -->
+	<insert id="memberShipInsert" parameterType="com.ohot.shop.vo.MemberShopVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="membershipNo">
+			SELECT NVL(MAX(MEMBERSHIP_NO),0)+1 FROM MEMBERSHIP
+		</selectKey>
+		
+		INSERT INTO membership (
+				    membership_no
+				  , gds_no
+				  , com_profile_no
+				  , start_ymd
+				  , exp_ymd
+				) VALUES (
+				    #{membershipNo}
+				  , #{gdsNo}
+				  , #{comProfileNo}
+				  , SYSDATE
+				  , SYSDATE + 30
+				)
+	</insert>
+	
+	<!-- CommunityProfileUpdate -->
+	<update id="CommunityProfileUpdate" parameterType="com.ohot.home.community.vo.CommunityProfileVO">
+	  /* com.ohot.shop.mapper.PaymentMapper.CommunityProfileUpdate */
+	  UPDATE COMMUNITY_PROFILE
+  		 SET MEMBERSHIP_YN = 'Y'
+	   WHERE COM_PROFILE_NO = #{comProfileNo} 
+	     AND MEM_NO = #{memNo}
+	</update>
+	
+	<!-- orders Update -->
+	<update id="UpdateOrdersComplete" parameterType="com.ohot.shop.vo.OrdersVO">
+	/* com.ohot.shop.mapper.PaymentMapper.UpdateOrdersComplete */
+	UPDATE ORDERS
+	   SET STLM_YN = #{stlmYn},
+	   	   PAYMENT_KEY =  #{paymentKey}
+	WHERE ORDER_NO = #{orderNo}
+	</update>
+</mapper>

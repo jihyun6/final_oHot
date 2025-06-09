@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ohot.home.groupProfile.mapper.GroupProfileMapper">
+
+	<resultMap type="com.ohot.vo.ArtistGroupVO" id="artistGroupMap">
+		<result property="rnum" column="RNUM"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupDebutYmd" column="ART_GROUP_DEBUT_YMD"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupNmKo" column="ART_GROUP_NM_KO"/>
+		<result property="artGroupExpln" column="ART_GROUP_EXPLN"/>
+		<result property="artGroupRegYmd" column="ART_GROUP_REG_YMD"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="logoFileGroupNo" column="LOGO_FILE_GROUP_NO"/>
+		<result property="fileLogoSaveLocate" column="FILE_LOGO_SAVE_LOCATE"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.ArtistVO" id="artistMap">
+		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artActNm" column="ART_ACT_NM"/>
+		<result property="artExpln" column="ART_EXPLN"/>
+		<result property="artBirth" column="ART_BIRTH"/>
+		<result property="artRegYmd" column="ART_REG_YMD"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="memNo" column="MEM_NO"/>
+		<result property="artDelYn" column="ART_DEL_YN"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.GoodsVO" id="goodsMap">
+		<result property="qty" column="QTY"/>
+		<result property="gdsDelYn" column="GDS_DEL_YN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="gdsType" column="GDS_TYPE"/>
+		<result property="gdsNm" column="GDS_NM"/>
+		<result property="unitPrice" column="UNIT_PRICE"/>
+		<result property="expln" column="EXPLN"/>
+		<result property="pic" column="PIC"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+		<collection property="ticketVO" resultMap="ticketMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.shop.vo.TicketVO" id="ticketMap">
+		<result property="posterFile" column="POSTER_FILE"/>
+		<result property="tkVprice" column="TK_VPRICE"/>
+		<result property="tkRprice" column="TK_RPRICE"/>
+		<result property="tkSprice" column="TK_SPRICE"/>
+		<result property="tkNo" column="TK_NO"/>
+		<result property="tkCtgr" column="TK_CTGR"/>
+		<result property="tkLctn" column="TK_LCTN"/>
+		<result property="gdsNo" column="GDS_NO"/>
+		<result property="tkStartYmd" column="TK_START_YMD"/>
+		<result property="tkFinishYmd" column="TK_FINISH_YMD"/>
+		<result property="tkFileSaveLocate" column="TK_FILE_SAVE_LOCATE"/>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.ohot.vo.FileDetailVO" id="fileDetailMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<select id="getArtistGroup" parameterType="int" resultMap="artistGroupMap">
+		/* com.ohot.mapper.GroupProfileMapper.getArtistGroup */
+		<include refid="fileDetail"/>
+		SELECT  ag.art_group_no
+            , ag.art_group_debut_ymd
+            , ag.art_group_nm
+            , ag.art_group_nm_ko
+            , ag.art_group_expln
+            , REGEXP_REPLACE(ag.art_group_reg_ymd, '(.{4})(.{2})(.{2})', '\1-\2-\3') AS art_group_reg_ymd
+            , ag.art_group_del_yn
+            , fg.file_regdate
+            , fd.*
+            , 	(
+                SELECT f.file_save_locate
+                  FROM file_detail f
+                 WHERE f.file_group_no = ag.logo_file_group_no 
+                  ) AS file_logo_save_locate
+		FROM artist_group ag 
+				LEFT OUTER JOIN file_group fg ON(ag.file_group_no = fg.file_group_no)
+				LEFT OUTER JOIN fd ON fg.file_group_no = fd.file_group_no AND fd.rn = 1
+		WHERE ag.art_group_no = #{artGroupNo}
+	</select>
+	
+	<select id="getArtistList" parameterType="int" resultMap="artistMap">
+		/* com.ohot.mapper.GroupProfileMapper.getArtistList */
+		<include refid="fileDetail"/>
+		SELECT
+		          a.art_no
+		        , a.art_group_no
+		        , a.art_act_nm
+		        , a.art_expln
+		        , REGEXP_REPLACE(m.mem_birth, '(.{4})(.{2})(.{2})', '\1.\2.\3') AS art_birth
+		        , a.art_reg_ymd
+		        , a.file_group_no
+		        , a.mem_no
+		        , a.art_del_yn
+		        , fg.file_regdate
+		        , fd.*
+		FROM    artist a
+		LEFT OUTER JOIN member m ON (a.mem_no = m.mem_no)
+		LEFT OUTER JOIN file_group fg ON (a.file_group_no = fg.file_group_no)
+		LEFT OUTER JOIN fd ON (fg.file_group_no = fd.file_group_no AND fd.rn = 1)
+		WHERE   a.art_del_yn = 'N'
+		AND     a.art_group_no = #{artGroupNo}
+		ORDER BY art_act_nm
+	</select>
+	
+	<!-- SQL 시작 -->
+	<sql id="fileDetail">
+	  WITH fd AS (
+	    SELECT file_sn
+	         , file_group_no
+	         , file_original_name
+	         , file_save_name
+	         , file_save_locate
+	         , file_size
+	         , file_ext
+	         , file_mime
+	         , file_fancysize
+	         , file_save_date
+	         , file_downcount
+	         , ROW_NUMBER() OVER (PARTITION BY file_group_no ORDER BY file_sn DESC) AS rn
+	    FROM file_detail
+	  )
+	</sql>
+	<!-- SQL 끝 -->
+	
+</mapper>
