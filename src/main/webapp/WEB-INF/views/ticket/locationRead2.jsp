@@ -7,7 +7,7 @@
     <title>Insert title here</title>
     <script src="/js/jquery-3.6.0.js"></script>
     <script
-        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bbbb5ddb701600ead3a6e1ca8df07686&libraries=services"></script>
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=key를 입력하세요"></script>
 </head>
 
 <body>
