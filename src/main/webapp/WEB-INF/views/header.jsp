@@ -320,6 +320,22 @@ function alarmconnect(){
 
 }
 
+//페이지 이동시 웹소켓 연결 끊어주기
+//클릭발생시
+document.addEventListener("click", function(e) {
+    const link = e.target.closest("a");
+    const form = e.target.closest("form");
+
+	//페이지 전환일때만 작동
+    if (link || form) {
+        // 새 페이지로 이동 예정이면 disconnect
+        if (stompClientAlarm) stompClientAlarm.disconnect();
+        // if (socket) socket.close();
+		console.log("disconnect success");
+    }
+});
+
+
 <!-- 로그인 버튼 클릭 시 현재 페이지 redirectURL로 저장하기 -->
  function redirectToLogin() {
 
